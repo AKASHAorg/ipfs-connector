@@ -1,0 +1,8 @@
+{
+  "ambientDependencies": {
+    "node": "registry:dt/node#4.0.0+20160509154515"
+  },
+  "dependencies": {
+    "bluebird": "registry:npm/bluebird#3.3.4+20160427051630"
+  }
+}

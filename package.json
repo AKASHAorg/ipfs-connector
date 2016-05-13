@@ -1,0 +1,27 @@
+{
+  "name": "ipfs-connector",
+  "version": "0.4.1",
+  "description": "Ipfs download/process manager",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ipfs",
+    "go-ipfs"
+  ],
+  "author": "Marius Darila",
+  "license": "MPL-2.0",
+  "dependencies": {
+    "bin-wrapper": "^3.0.2",
+    "bluebird": "^3.3.5",
+    "winston": "^2.2.0"
+  },
+  "devDependencies": {
+    "ts-loader": "^0.8.2",
+    "tslint": "^3.10.1",
+    "typedoc": "sierrasoftworks/typedoc#v1.8.10",
+    "typescript": "^1.8.10",
+    "typings": "^0.8.1"
+  }
+}

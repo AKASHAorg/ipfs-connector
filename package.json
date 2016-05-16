@@ -15,9 +15,11 @@
   "dependencies": {
     "bin-wrapper": "^3.0.2",
     "bluebird": "^3.3.5",
+    "ipfs-api": "^4.0.2",
     "winston": "^2.2.0"
   },
   "devDependencies": {
+    "retire": "^1.1.4",
     "ts-loader": "^0.8.2",
     "tslint": "^3.10.1",
     "typedoc": "sierrasoftworks/typedoc#v1.8.10",

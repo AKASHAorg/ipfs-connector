@@ -1,7 +1,11 @@
-declare class IpfsApi{
-    constructor(options?: any);
+declare class IpfsApi {
+    constructor (options?: any);
+
+    add (arrayOrBufferOrStream: any[] | any, options?: {}): Promise<{}>;
+    cat (sources: string | string[]): Promise<{}>;
 }
 
 declare module 'ipfs-api' {
-    export = IpfsApi;
+    const stub: any;
+    export = stub;
 }

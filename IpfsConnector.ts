@@ -3,10 +3,11 @@
 import { homedir } from 'os';
 import * as Promise from 'bluebird';
 import { IpfsBin } from './IpfsBin';
+import { IpfsApiHelper } from './IpfsApiHelper';
 
 import childProcess = require('child_process');
 import path = require('path');
-import ipfsApi = require('ipfs-api');
+import * as ipfsApi from 'ipfs-api';
 
 const symbolEnforcer = Symbol();
 const symbol = Symbol();
@@ -15,6 +16,7 @@ export class IpfsConnector {
     private process: childProcess.ChildProcess;
     private downloadManager = new IpfsBin();
     private logger: any = console;
+    private _api: IpfsApiHelper;
     public options = {
         retry: true,
         apiAddress: '/ip4/127.0.0.1/tcp/5001',
@@ -44,6 +46,18 @@ export class IpfsConnector {
             this[symbol] = new IpfsConnector(symbolEnforcer);
         }
         return this[symbol];
+    }
+
+    /**
+     * 
+     * @returns {IpfsApiHelper}
+     */
+    get api (): IpfsApiHelper {
+        if (!this._api) {
+            let api =  ipfsApi(this.options.apiAddress);
+            this._api = new IpfsApiHelper(api);
+        }
+        return this._api;
     }
 
     /**
@@ -101,6 +115,7 @@ export class IpfsConnector {
     public stop (signal = 'SIGINT'): void {
         this.process.kill(signal);
         this.process = null;
+        this._api = null;
         this.options.retry = true;
     }
 

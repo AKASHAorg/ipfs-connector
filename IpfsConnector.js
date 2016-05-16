@@ -2,8 +2,10 @@
 const os_1 = require('os');
 const Promise = require('bluebird');
 const IpfsBin_1 = require('./IpfsBin');
+const IpfsApiHelper_1 = require('./IpfsApiHelper');
 const childProcess = require('child_process');
 const path = require('path');
+const ipfsApi = require('ipfs-api');
 const symbolEnforcer = Symbol();
 const symbol = Symbol();
 class IpfsConnector {
@@ -29,6 +31,13 @@ class IpfsConnector {
             this[symbol] = new IpfsConnector(symbolEnforcer);
         }
         return this[symbol];
+    }
+    get api() {
+        if (!this._api) {
+            let api = ipfsApi(this.options.apiAddress);
+            this._api = new IpfsApiHelper_1.IpfsApiHelper(api);
+        }
+        return this._api;
     }
     setLogger(logger) {
         this.logger = logger;
@@ -58,6 +67,7 @@ class IpfsConnector {
     stop(signal = 'SIGINT') {
         this.process.kill(signal);
         this.process = null;
+        this._api = null;
         this.options.retry = true;
     }
     _init() {

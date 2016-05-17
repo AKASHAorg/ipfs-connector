@@ -19,6 +19,9 @@ class IpfsApiHelper {
     _add(source) {
         const options = Object.assign({}, { isPath: false, recursive: false, followSymlinks: false }, source.options);
         let contentBody = source.data;
+        if (options.recursive) {
+            options.isPath = true;
+        }
         if (!options.isPath) {
             contentBody = new Buffer(contentBody);
         }

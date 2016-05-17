@@ -1,13 +1,13 @@
-/// <reference path="typings/main.d.ts"/>
+/// <reference path="../typings/main.d.ts"/>
 
 import { homedir } from 'os';
 import * as Promise from 'bluebird';
 import { IpfsBin } from './IpfsBin';
 import { IpfsApiHelper } from './IpfsApiHelper';
+import * as ipfsApi from 'ipfs-api';
 
 import childProcess = require('child_process');
 import path = require('path');
-import * as ipfsApi from 'ipfs-api';
 
 const symbolEnforcer = Symbol();
 const symbol = Symbol();
@@ -23,7 +23,7 @@ export class IpfsConnector {
         args: ['daemon'],
         executable: '',
         extra: {
-            env: Object.assign({}, process.env, { IPFS_PATH: path.join(homedir(), '.ipfsAkasha') }),
+            env: Object.assign({}, process.env, { IPFS_PATH: path.join(homedir(), '.ipfs') }),
             detached: true
         }
     };
@@ -49,12 +49,12 @@ export class IpfsConnector {
     }
 
     /**
-     * 
+     *
      * @returns {IpfsApiHelper}
      */
     get api (): IpfsApiHelper {
         if (!this._api) {
-            let api =  ipfsApi(this.options.apiAddress);
+            let api = ipfsApi(this.options.apiAddress);
             this._api = new IpfsApiHelper(api);
         }
         return this._api;
@@ -69,16 +69,33 @@ export class IpfsConnector {
     }
 
     /**
-     * Modify spawn options for ipfs process
-     * @param options
+     * Set ipfs target folder
+     * @param path
      */
-    public setConfig (options: {}): void {
-        Object.assign(this.options, options);
+    public setBinPath (path: string): void {
+        this.downloadManager = new IpfsBin(path);
+    }
+
+    /**
+     * Modify spawn options for ipfs process
+     * @param option
+     * @param value
+     */
+    public setConfig (option: string, value: string): void {
+        this.options[option] = value;
+    }
+
+    /**
+     * Set ipfs init folder
+     * @param target
+     */
+    public setIpfsFolder (target: string): void {
+        this.options.extra.env.IPFS_PATH = target;
     }
 
     /**
      * Check and download ipfs executable if needed.
-     * Default target for executable is `path.join(__dirname, 'bin')`
+     * Default target for executable
      * @returns {Bluebird<boolean>}
      */
     public checkExecutable (): Promise<{}> {

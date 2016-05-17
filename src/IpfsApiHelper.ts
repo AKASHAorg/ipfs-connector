@@ -1,9 +1,13 @@
-/// <reference path="typings/main.d.ts"/>
+/// <reference path="../typings/main.d.ts"/>
 import * as Promise from 'bluebird';
 
 export class IpfsApiHelper {
     public apiClient: any;
 
+    /**
+     * Set ipfs-api object
+     * @param provider
+     */
     constructor (provider: any) {
         this.apiClient = provider;
     }
@@ -26,7 +30,7 @@ export class IpfsApiHelper {
     /**
      * Read data from ipfs
      * @param hashSource
-     * @returns {any}
+     * @returns {Bluebird<any>}
      */
     public cat (hashSource: {
         id: string,
@@ -39,7 +43,7 @@ export class IpfsApiHelper {
     }
 
     /**
-     *
+     * Read data from ipfs
      * @param source
      * @returns {Bluebird}
      * @private
@@ -48,8 +52,10 @@ export class IpfsApiHelper {
         const options = Object.assign({},
             { isPath: false, recursive: false, followSymlinks: false },
             source.options);
-
         let contentBody = source.data;
+        if (options.recursive) {
+            options.isPath = true;
+        }
 
         if (!options.isPath) {
             contentBody = new Buffer(contentBody);

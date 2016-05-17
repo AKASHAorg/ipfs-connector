@@ -4,6 +4,7 @@
     "module": "commonjs",
     "noImplicitAny": true,
     "removeComments": true,
+    "moduleResolution": "classic",
     "noLib": false,
     "preserveConstEnums": true,
     "suppressImplicitAnyIndexErrors": true

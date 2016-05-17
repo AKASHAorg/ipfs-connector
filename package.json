@@ -4,14 +4,25 @@
   "description": "Ipfs download/process manager",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha tests/index.js",
+    "docs": "typedoc index.ts --out docs"
   },
   "keywords": [
     "ipfs",
     "go-ipfs"
   ],
+  "engines": {
+    "node": ">=5.10.0"
+  },
   "author": "Marius Darila",
   "license": "MPL-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AkashaProject/ipfs-connector"
+  },
+  "bugs": {
+    "url": "https://github.com/AkashaProject/ipfs-connector/issues"
+  },
   "dependencies": {
     "bin-wrapper": "^3.0.2",
     "bluebird": "^3.3.5",
@@ -19,8 +30,10 @@
     "winston": "^2.2.0"
   },
   "devDependencies": {
-    "retire": "^1.1.4",
-    "ts-loader": "^0.8.2",
+    "chai": "^3.5.0",
+    "chai-as-promised": "^5.3.0",
+    "mocha": "^2.4.5",
+    "rimraf": "^2.5.2",
     "tslint": "^3.10.1",
     "typedoc": "sierrasoftworks/typedoc#v1.8.10",
     "typescript": "^1.8.10",

@@ -3,9 +3,9 @@ const os_1 = require('os');
 const Promise = require('bluebird');
 const IpfsBin_1 = require('./IpfsBin');
 const IpfsApiHelper_1 = require('./IpfsApiHelper');
+const ipfsApi = require('ipfs-api');
 const childProcess = require('child_process');
 const path = require('path');
-const ipfsApi = require('ipfs-api');
 const symbolEnforcer = Symbol();
 const symbol = Symbol();
 class IpfsConnector {
@@ -18,7 +18,7 @@ class IpfsConnector {
             args: ['daemon'],
             executable: '',
             extra: {
-                env: Object.assign({}, process.env, { IPFS_PATH: path.join(os_1.homedir(), '.ipfsAkasha') }),
+                env: Object.assign({}, process.env, { IPFS_PATH: path.join(os_1.homedir(), '.ipfs') }),
                 detached: true
             }
         };
@@ -42,8 +42,14 @@ class IpfsConnector {
     setLogger(logger) {
         this.logger = logger;
     }
-    setConfig(options) {
-        Object.assign(this.options, options);
+    setBinPath(path) {
+        this.downloadManager = new IpfsBin_1.IpfsBin(path);
+    }
+    setConfig(option, value) {
+        this.options[option] = value;
+    }
+    setIpfsFolder(target) {
+        this.options.extra.env.IPFS_PATH = target;
     }
     checkExecutable() {
         return this.downloadManager.check().then(data => {

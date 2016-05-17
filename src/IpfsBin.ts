@@ -1,12 +1,21 @@
-"use strict";
-const { version } = require('./package.json');
-const Promise = require('bluebird');
-const Wrapper = require('bin-wrapper');
-const path = require('path');
-const base = `http://dist.ipfs.io/go-ipfs/v${version}/go-ipfs_v${version}_`;
+/// <reference path="../typings/main.d.ts"/>
+
+const { version } = require('../package.json');
+import * as  Promise from 'bluebird';
+
+import Wrapper = require('bin-wrapper');
+import path = require('path');
+
+const base: string = `http://dist.ipfs.io/go-ipfs/v${version}/go-ipfs_v${version}_`;
 const defaultTarget = path.join(__dirname, 'bin');
-class IpfsBin {
-    constructor(target = defaultTarget) {
+
+export class IpfsBin {
+    public wrapper: Wrapper;
+
+    /**
+     * @param target    Folder path for `target` ipfs executable
+     */
+    constructor (target = defaultTarget) {
         this.wrapper = new Wrapper()
             .src(base + 'linux-amd64.tar.gz', 'linux', 'x64')
             .src(base + 'linux-386.tar.gz', 'linux', 'ia32')
@@ -17,15 +26,20 @@ class IpfsBin {
             .dest(target)
             .use(process.platform === 'win32' ? 'ipfs.exe' : 'ipfs');
     }
-    check() {
+
+    /**
+     * Start download and check the ipfs executable
+     * @returns {Bluebird}
+     */
+    check (): Promise<{}> {
         return new Promise((resolve, reject) => {
-            this.wrapper.run(['version'], (err) => {
+            this.wrapper.run(['version'], (err: any) => {
                 if (err) {
                     return reject(err);
                 }
+
                 return resolve('ipfs-bin: executable is ok');
             });
         });
     }
 }
-exports.IpfsBin = IpfsBin;

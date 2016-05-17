@@ -1,5 +1,6 @@
 # ipfs-connector
 
+[API DOCS](http://docs.akasha.world/ipfs-connector/index.html)
 ```javascript
 import { IpfsConnector } from 'ipfs-connector';
 

@@ -5,10 +5,9 @@ Library for solving the cross-platform binaries problem (works on Windows as wel
 Some of the differences:
 
 - Able to specify init folder
-- Better control over `cat` on file options
 - Promised based, no callbacks 
 - Connector can be accessed from anywhere inside the app as it is a singleton
-- Plug your favorite logging library - by default console. See [tests folder](https://github.com/AkashaProject/ipfs-connector/tree/master/tests) for Winston examples
+- Plug your favorite logging library (by default console). See [tests folder](https://github.com/AkashaProject/ipfs-connector/tree/master/tests) for Winston examples
 
 For more information please see the [API docs](http://docs.akasha.world/ipfs-connector/index.html)
 

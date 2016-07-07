@@ -1,4 +1,6 @@
 # ipfs-connector
+[![Build Status](https://travis-ci.org/AkashaProject/ipfs-connector.svg?branch=master)](https://travis-ci.org/AkashaProject/ipfs-connector)
+[![bitHound Overall Score](https://www.bithound.io/github/AkashaProject/ipfs-connector/badges/score.svg)](https://www.bithound.io/github/AkashaProject/ipfs-connector)
 
 Library for solving the cross-platform binaries problem (works on Windows as well) containing helpers for easier read/write on IPFS by extending the [JavaScript IPFS API](https://github.com/ipfs/js-ipfs-api) functionality. 
 

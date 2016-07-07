@@ -28,7 +28,7 @@ describe('IpfsConnector', function () {
         ]
     });
 
-    this.timeout(25000);
+    this.timeout(0);
 
     before(function (done) {
         instance.setBinPath(binTarget);
@@ -49,17 +49,18 @@ describe('IpfsConnector', function () {
     });
 
     it('starts ipfs daemon', function () {
+        instance.setLogger(console);
         return expect(instance.start()).to.be.fulfilled;
     });
 
     describe('.add()', function () {
 
-        it('adds text to ipfs', function () {
+        it.skip('adds text to ipfs', function () {
             expect(instance.api).to.be.defined;
             return expect(instance.api.add({ data: '{}' })).to.eventually.have.length(1);
         });
 
-        it('adds a folder to ipfs ', function () {
+        it.skip('adds a folder to ipfs ', function () {
             return expect(
                 instance.api.add({
                     data: path.join(__dirname, 'stubs'),
@@ -68,7 +69,7 @@ describe('IpfsConnector', function () {
             ).to.eventually.have.length(5);
         });
 
-        it('adds a file to ipfs', function () {
+        it.skip('adds a file to ipfs', function () {
             let responseList = [];
             return instance.api.add({
                 data: filePath,
@@ -87,7 +88,7 @@ describe('IpfsConnector', function () {
             })
         });
 
-        it('adds from multiple sources', function () {
+        it.skip('adds from multiple sources', function () {
             return expect(instance.api.add([
                 { data: '{' },
                 { data: '}' },
@@ -98,7 +99,7 @@ describe('IpfsConnector', function () {
     });
 
     describe('.cat()', function () {
-        it('reads data from hash', function () {
+        it.skip('reads data from hash', function () {
             const dummyText = 'b/n&%sa';
             return instance.api
                 .add({ data: dummyText })
@@ -106,7 +107,7 @@ describe('IpfsConnector', function () {
                 .then((response) => expect(response).to.equal(dummyText))
                 .catch((err) => expect(err).to.be.undefined);
         });
-        it('reads data from multiple sources', function () {
+        it.skip('reads data from multiple sources', function () {
             return instance.api
                 .add([
                     { data: '{}' },

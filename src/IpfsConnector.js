@@ -23,7 +23,7 @@ class IpfsConnector {
             }
         };
         if (enforcer !== symbolEnforcer) {
-            throw new Error('Use .getInstance() instead of new constructor');
+            throw new Error('Use .getInstance() instead of constructing a new object');
         }
     }
     static getInstance() {
@@ -78,13 +78,15 @@ class IpfsConnector {
     }
     _init() {
         return new Promise((resolve, reject) => {
-            let init = childProcess.exec(this.downloadManager.wrapper.path() + ' init', { env: this.options.extra.env });
-            init.once('exit', (code, signal) => {
-                if (code !== 0 && !signal) {
-                    this.logger.warn(`ipfs:_init failed { code: ${code}, signal: ${signal} }`);
-                    return reject(new Error('ipfs already init'));
+            let init = childProcess.exec(this.downloadManager.wrapper.path() + ' init', { env: this.options.extra.env }, (err, stdout, stderr) => {
+                if (err) {
+                    if (stderr.toString().includes('file already exists')) {
+                        return resolve('already init');
+                    }
+                    this.logger.error(stderr);
+                    return reject(stderr);
                 }
-                return resolve('init successful');
+                return resolve('init finished');
             });
             this.options.retry = false;
             this.process = null;
@@ -95,8 +97,11 @@ class IpfsConnector {
             this.checkExecutable().then(() => {
                 this.process = childProcess.spawn(this.downloadManager.wrapper.path(), this.options.args, this.options.extra);
                 this.process.stderr.on('data', (data) => {
+                    if (data.toString().includes('daemon is running')) {
+                        return resolve('already running');
+                    }
                     this.logger.error(`ipfs:_start:stderr: ${data}`);
-                    reject(new Error('could not start ipfs'));
+                    return reject(new Error('could not start ipfs'));
                 });
                 this.process.stdout.on('data', (data) => {
                     this.logger.info(`ipfs:_start:stdout: ${data}`);

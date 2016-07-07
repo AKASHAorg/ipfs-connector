@@ -1,11 +1,11 @@
 /// <reference path="../typings/main.d.ts"/>
 
-const { version } = require('../package.json');
 import * as  Promise from 'bluebird';
 
 import Wrapper = require('bin-wrapper');
 import path = require('path');
 
+const  version  = '0.4.1';
 const base: string = `http://dist.ipfs.io/go-ipfs/v${version}/go-ipfs_v${version}_`;
 const defaultTarget = path.join(__dirname, 'bin');
 

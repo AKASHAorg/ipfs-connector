@@ -1,9 +1,9 @@
 /// <reference path="../typings/main.d.ts"/>
 
-import { homedir } from 'os';
+import {homedir} from 'os';
 import * as Promise from 'bluebird';
-import { IpfsBin } from './IpfsBin';
-import { IpfsApiHelper } from './IpfsApiHelper';
+import {IpfsBin} from './IpfsBin';
+import {IpfsApiHelper} from './IpfsApiHelper';
 import * as ipfsApi from 'ipfs-api';
 
 import childProcess = require('child_process');
@@ -23,7 +23,7 @@ export class IpfsConnector {
         args: ['daemon'],
         executable: '',
         extra: {
-            env: Object.assign({}, process.env, { IPFS_PATH: path.join(homedir(), '.ipfs') }),
+            env: Object.assign({}, process.env, {IPFS_PATH: path.join(homedir(), '.ipfs')}),
             detached: true
         }
     };
@@ -31,9 +31,9 @@ export class IpfsConnector {
     /**
      * @param enforcer
      */
-    constructor (enforcer: Symbol) {
+    constructor(enforcer: Symbol) {
         if (enforcer !== symbolEnforcer) {
-            throw new Error('Use .getInstance() instead of new constructor');
+            throw new Error('Use .getInstance() instead of constructing a new object');
         }
     }
 
@@ -41,7 +41,7 @@ export class IpfsConnector {
      * Singleton constructor
      * @returns {IpfsConnector}
      */
-    public static getInstance (): IpfsConnector {
+    public static getInstance(): IpfsConnector {
         if (!this[symbol]) {
             this[symbol] = new IpfsConnector(symbolEnforcer);
         }
@@ -52,7 +52,7 @@ export class IpfsConnector {
      *
      * @returns {IpfsApiHelper}
      */
-    get api (): IpfsApiHelper {
+    get api(): IpfsApiHelper {
         if (!this._api) {
             let api = ipfsApi(this.options.apiAddress);
             this._api = new IpfsApiHelper(api);
@@ -64,7 +64,7 @@ export class IpfsConnector {
      * Set logging object, winston works great
      * @param logger
      */
-    public setLogger (logger: {}): void {
+    public setLogger(logger: {}): void {
         this.logger = logger;
     }
 
@@ -72,7 +72,7 @@ export class IpfsConnector {
      * Set ipfs target folder
      * @param path
      */
-    public setBinPath (path: string): void {
+    public setBinPath(path: string): void {
         this.downloadManager = new IpfsBin(path);
     }
 
@@ -81,7 +81,7 @@ export class IpfsConnector {
      * @param option
      * @param value
      */
-    public setConfig (option: string, value: string): void {
+    public setConfig(option: string, value: string): void {
         this.options[option] = value;
     }
 
@@ -89,7 +89,7 @@ export class IpfsConnector {
      * Set ipfs init folder
      * @param target
      */
-    public setIpfsFolder (target: string): void {
+    public setIpfsFolder(target: string): void {
         this.options.extra.env.IPFS_PATH = target;
     }
 
@@ -98,7 +98,7 @@ export class IpfsConnector {
      * Default target for executable
      * @returns {Bluebird<boolean>}
      */
-    public checkExecutable (): Promise<{}> {
+    public checkExecutable(): Promise<{}> {
         return this.downloadManager.check().then(data => {
             this.logger.info(data);
             return true;
@@ -112,7 +112,7 @@ export class IpfsConnector {
      * Start ipfs daemon process
      * @returns {Bluebird<U>}
      */
-    public start (): Promise<{}> {
+    public start(): Promise<{}> {
         return this._start().then(data => {
             return data;
         }).catch(err => {
@@ -129,7 +129,7 @@ export class IpfsConnector {
      * Stop ipfs daemon
      * @param signal
      */
-    public stop (signal = 'SIGINT'): void {
+    public stop(signal = 'SIGINT'): void {
         this.process.kill(signal);
         this.process = null;
         this._api = null;
@@ -141,21 +141,22 @@ export class IpfsConnector {
      * @returns {Bluebird}
      * @private
      */
-    private _init (): Promise<{}> {
+    private _init(): Promise<{}> {
         return new Promise((resolve, reject) => {
             let init = childProcess.exec(
                 this.downloadManager.wrapper.path() + ' init',
-                { env: this.options.extra.env }
-            );
-
-            init.once('exit', (code: number, signal: any) => {
-                if (code !== 0 && !signal) {
-                    this.logger.warn(`ipfs:_init failed { code: ${code}, signal: ${signal} }`);
-                    return reject(new Error('ipfs already init'));
+                { env: this.options.extra.env },
+                (err: Error, stdout: string, stderr: string) => {
+                    if (err) {
+                        if (stderr.toString().includes('file already exists')) {
+                            return resolve('already init');
+                        }
+                        this.logger.error(stderr);
+                        return reject(stderr);
+                    }
+                    return resolve('init finished');
                 }
-                return resolve('init successful');
-            });
-
+            );
             this.options.retry = false;
             this.process = null;
         });
@@ -166,7 +167,7 @@ export class IpfsConnector {
      * @returns {Bluebird}
      * @private
      */
-    private _start (): Promise<{}> {
+    private _start(): Promise<{}> {
         return new Promise((resolve, reject) => {
             this.checkExecutable().then(
                 () => {
@@ -175,9 +176,13 @@ export class IpfsConnector {
                         this.options.args,
                         this.options.extra
                     );
+                    // @TODO: emit events instead of resolve promise
                     this.process.stderr.on('data', (data: string) => {
+                        if (data.toString().includes('daemon is running')) {
+                            return resolve('already running');
+                        }
                         this.logger.error(`ipfs:_start:stderr: ${data}`);
-                        reject(new Error('could not start ipfs'));
+                        return reject(new Error('could not start ipfs'));
                     });
 
                     this.process.stdout.on('data', (data: string) => {

@@ -1,8 +1,8 @@
 "use strict";
-const { version } = require('../package.json');
 const Promise = require('bluebird');
 const Wrapper = require('bin-wrapper');
 const path = require('path');
+const version = '0.4.1';
 const base = `http://dist.ipfs.io/go-ipfs/v${version}/go-ipfs_v${version}_`;
 const defaultTarget = path.join(__dirname, 'bin');
 class IpfsBin {

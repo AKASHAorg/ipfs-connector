@@ -1,7 +1,7 @@
 /// <reference path="../typings/main.d.ts"/>
 
 import * as  Promise from 'bluebird';
-
+import { unlink } from 'fs';
 import Wrapper = require('bin-wrapper');
 import path = require('path');
 
@@ -28,6 +28,14 @@ export class IpfsBin {
     }
 
     /**
+     * Get exec path for IPFS
+     * @returns {string}
+     */
+    getPath() {
+        return this.wrapper.path();
+    }
+
+    /**
      * Start download and check the ipfs executable
      * @returns {Bluebird}
      */
@@ -38,8 +46,17 @@ export class IpfsBin {
                     return reject(err);
                 }
 
-                return resolve('ipfs-bin: executable is ok');
+                return resolve(this.getPath());
             });
         });
+    }
+
+    /**
+     *
+     * @returns {Bluebird<T>}
+     */
+    deleteBin() {
+        const unlinkAsync = Promise.promisify(unlink);
+        return unlinkAsync(this.getPath());
     }
 }

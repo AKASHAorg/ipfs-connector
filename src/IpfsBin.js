@@ -1,5 +1,6 @@
 "use strict";
 const Promise = require('bluebird');
+const fs_1 = require('fs');
 const Wrapper = require('bin-wrapper');
 const path = require('path');
 const version = '0.4.1';
@@ -17,15 +18,22 @@ class IpfsBin {
             .dest(target)
             .use(process.platform === 'win32' ? 'ipfs.exe' : 'ipfs');
     }
+    getPath() {
+        return this.wrapper.path();
+    }
     check() {
         return new Promise((resolve, reject) => {
             this.wrapper.run(['version'], (err) => {
                 if (err) {
                     return reject(err);
                 }
-                return resolve('ipfs-bin: executable is ok');
+                return resolve(this.getPath());
             });
         });
+    }
+    deleteBin() {
+        const unlinkAsync = Promise.promisify(fs_1.unlink);
+        return unlinkAsync(this.getPath());
     }
 }
 exports.IpfsBin = IpfsBin;

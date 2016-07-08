@@ -5,6 +5,7 @@ const chai = require("chai");
 const chaiAsPromised = require("chai-as-promised");
 const rimraf = require("rimraf");
 const winston = require('winston');
+const constants = require('../src/constants');
 chai.use(chaiAsPromised);
 
 const expect = chai.expect;
@@ -32,7 +33,7 @@ describe('IpfsConnector', function () {
 
     before(function (done) {
         instance.setBinPath(binTarget);
-        instance.checkExecutable().then(function () {
+        rimraf(binTarget, function () {
             done();
         });
     });
@@ -48,9 +49,19 @@ describe('IpfsConnector', function () {
         expect(instance.logger).to.equal(logger);
     });
 
-    it('starts ipfs daemon', function () {
+    it('emits downloading binaries', function(done){
+        instance.once(constants.events.DOWNLOAD_STARTED, function(){
+           done();
+        });
+        instance.checkExecutable();
+    });
+
+    it('starts ipfs daemon', function (done) {
         instance.setLogger(console);
-        return expect(instance.start()).to.be.fulfilled;
+        instance.on(constants.events.SERVICE_STARTED, function(){
+            done();
+        });
+        instance.start();
     });
 
     describe('.add()', function () {

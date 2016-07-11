@@ -66,9 +66,25 @@ describe('IpfsConnector', function () {
 
     describe('.add()', function () {
 
-        it.skip('adds text to ipfs', function () {
+        it('adds text to ipfs', function (done) {
             expect(instance.api).to.be.defined;
-            return expect(instance.api.add({ data: '{}' })).to.eventually.have.length(1);
+            instance.api.add({ data: '{}' })
+                .then(
+                    (data)=>{
+                        expect(data).to.be.defined;
+                        instance.api.get(data.toJSON().Hash).then(
+                            (data1) => {
+                                expect(data1).to.have.property('data').and.to.equal('{}');
+                                done();
+                            }
+                        ).catch(err => {
+                           throw new Error(err);
+                        })
+                    }
+                ).catch(err => {
+                expect(err).to.be.undefined;
+                done();
+            })
         });
 
         it.skip('adds a folder to ipfs ', function () {

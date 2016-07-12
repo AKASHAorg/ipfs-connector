@@ -2,11 +2,10 @@ const { IpfsConnector } = require('../src/IpfsConnector');
 const path = require('path');
 const fs = require('fs');
 const chai = require("chai");
-const chaiAsPromised = require("chai-as-promised");
 const rimraf = require("rimraf");
 const winston = require('winston');
 const constants = require('../src/constants');
-chai.use(chaiAsPromised);
+const bigObject = require('./stubs/bigObject.json');
 
 const expect = chai.expect;
 
@@ -66,7 +65,7 @@ describe('IpfsConnector', function () {
 
     describe('.add()', function () {
 
-        it('adds text to ipfs', function (done) {
+        it('adds object to ipfs', function (done) {
             expect(instance.api).to.be.defined;
             instance.api.add({ data: '{}' })
                 .then(
@@ -74,7 +73,7 @@ describe('IpfsConnector', function () {
                         expect(data).to.be.defined;
                         instance.api.get(data.toJSON().Hash).then(
                             (data1) => {
-                                expect(data1).to.have.property('data').and.to.equal('{}');
+                                expect(data1).to.have.property('data');
                                 done();
                             }
                         ).catch(err => {
@@ -85,6 +84,31 @@ describe('IpfsConnector', function () {
                 expect(err).to.be.undefined;
                 done();
             })
+        });
+
+        it('updates from existing object', function(done){
+            const initialObj = {a: 1, b: 2};
+            instance.api.add(initialObj)
+                .then((hash)=>{
+                    const patchAttr = {b: 3};
+                    instance.api.update(hash.toJSON().Hash, patchAttr).then((result)=>{
+                        expect(result.Data.a).to.equal(initialObj.a);
+                        expect(result.Data.b).to.equal(patchAttr.b);
+                        expect(result.Hash).to.be.defined;
+                        instance.api._hasChunks(result.Hash).then(
+                            (stats)=>{
+                                expect(stats.NumLinks).to.be.defined;
+                                done();
+                            }
+                        )
+                    }).catch(err=> console.log(err));
+                })
+        });
+
+        it('rejects when object is too big', function(done){
+            instance.api.add(bigObject)
+                .then(data => { expect(data).to.equal(false); done();})
+                .catch(err => { expect(err).to.be.defined; done();})
         });
 
         it.skip('adds a folder to ipfs ', function () {

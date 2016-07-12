@@ -1,19 +1,56 @@
 "use strict";
 const Promise = require('bluebird');
 const isIpfs = require('is-ipfs');
+const statics_1 = require('./statics');
 class IpfsApiHelper {
     constructor(provider) {
+        this.OBJECT_MAX_SIZE = 512 * 1024;
+        this.REQUEST_TIMEOUT = 60 * 1000;
         this.apiClient = provider;
     }
     add(data) {
-        return this.apiClient.object.put(new Buffer(JSON.stringify(data)));
+        let dataBuffer;
+        dataBuffer = statics_1.toDataBuffer(data);
+        if (dataBuffer.length > this.OBJECT_MAX_SIZE) {
+            return Promise.reject('Data is too big for an object, use file api instead');
+        }
+        return this.apiClient.object.put(dataBuffer);
     }
     get(objectHash) {
+        if (isIpfs.multihash(objectHash)) {
+            return this.apiClient
+                .object
+                .getAsync(objectHash, { enc: 'base58' })
+                .timeout(this.REQUEST_TIMEOUT)
+                .then((rawData) => {
+                return statics_1.fromRawData(rawData);
+            });
+        }
+    }
+    _hasChunks(objectHash) {
         return this.apiClient
             .object
-            .get(objectHash, { enc: 'base58' })
-            .then((rawData) => {
-            return JSON.parse(rawData.toJSON().Data);
+            .statAsync(objectHash, { enc: 'base58' })
+            .timeout(this.REQUEST_TIMEOUT)
+            .then((result) => {
+            return result;
+        });
+    }
+    update(hash, newData) {
+        return this.get(hash)
+            .then((dataResponse) => {
+            const updatedObject = Object.assign({}, dataResponse, newData);
+            const dataBuffer = statics_1.toDataBuffer(updatedObject);
+            return this.apiClient
+                .object
+                .patch
+                .setData(hash, dataBuffer, { enc: 'base58' });
+        })
+            .then((dagNode) => {
+            return {
+                Data: statics_1.fromRawData(dagNode),
+                Hash: dagNode.toJSON().Hash
+            };
         });
     }
     addFile(source) {

@@ -94,6 +94,8 @@ export class IpfsConnector extends EventEmitter {
     get api(): IpfsApiHelper {
         if (!this._api) {
             let api = ipfsApi(this.options.apiAddress);
+            api.object = Promise.promisifyAll(api.object);
+            api = Promise.promisifyAll(api);
             this._api = new IpfsApiHelper(api);
         }
         return this._api;

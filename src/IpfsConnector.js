@@ -1,4 +1,5 @@
 "use strict";
+const Promise = require('bluebird');
 const IpfsBin_1 = require('./IpfsBin');
 const IpfsApiHelper_1 = require('./IpfsApiHelper');
 const ipfsApi = require('ipfs-api');
@@ -58,6 +59,8 @@ class IpfsConnector extends events_1.EventEmitter {
     get api() {
         if (!this._api) {
             let api = ipfsApi(this.options.apiAddress);
+            api.object = Promise.promisifyAll(api.object);
+            api = Promise.promisifyAll(api);
             this._api = new IpfsApiHelper_1.IpfsApiHelper(api);
         }
         return this._api;

@@ -22,3 +22,8 @@ function constructLink(hash) {
     return null;
 }
 exports.constructLink = constructLink;
+function splitPath(path) {
+    return path.replace(/^\//, '')
+        .replace(/([^\\])\//g, '$1\u000B').split('\u000B');
+}
+exports.splitPath = splitPath;

@@ -1,7 +1,7 @@
 "use strict";
 const Promise = require('bluebird');
-const isIpfs = require('is-ipfs');
 const statics_1 = require('./statics');
+const is_ipfs_1 = require('is-ipfs');
 class IpfsApiHelper {
     constructor(provider) {
         this.OBJECT_MAX_SIZE = 512 * 1024;
@@ -10,24 +10,72 @@ class IpfsApiHelper {
     }
     add(data) {
         let dataBuffer;
-        dataBuffer = statics_1.toDataBuffer(data);
-        if (dataBuffer.length > this.OBJECT_MAX_SIZE) {
-            return Promise.reject('Data is too big for an object, use file api instead');
+        if (Buffer.isBuffer(data)) {
+            dataBuffer = data;
         }
-        return this.apiClient.object.put(dataBuffer);
-    }
-    get(objectHash) {
-        if (isIpfs.multihash(objectHash)) {
+        else {
+            dataBuffer = statics_1.toDataBuffer(data);
+        }
+        if (dataBuffer.length > this.OBJECT_MAX_SIZE) {
             return this.apiClient
-                .object
-                .getAsync(objectHash, { enc: 'base58' })
-                .timeout(this.REQUEST_TIMEOUT)
-                .then((rawData) => {
-                return statics_1.fromRawData(rawData);
+                .addAsync(dataBuffer)
+                .then((file) => {
+                return file[0].path;
             });
         }
+        return this.apiClient
+            .object
+            .putAsync(dataBuffer)
+            .then((dagNode) => {
+            return statics_1.fromRawObject(dagNode).Hash;
+        });
     }
-    _hasChunks(objectHash) {
+    get(objectHash) {
+        return this._getStats(objectHash)
+            .then((stats) => {
+            if (stats.NumLinks > 0) {
+                return this.getFile(objectHash);
+            }
+            return this.getObject(objectHash);
+        });
+    }
+    getObject(objectHash) {
+        return this.apiClient
+            .object
+            .getAsync(objectHash, { enc: 'base58' })
+            .timeout(this.REQUEST_TIMEOUT)
+            .then((rawData) => {
+            return statics_1.fromRawData(rawData);
+        });
+    }
+    getFile(hash) {
+        return new Promise((resolve, reject) => {
+            const chunks = [];
+            let fileLength = 0;
+            return this.apiClient
+                .catAsync(hash)
+                .timeout(this.REQUEST_TIMEOUT)
+                .then((stream) => {
+                if (stream.readable) {
+                    stream
+                        .on('error', (err) => {
+                        return reject(err);
+                    })
+                        .on('data', (data) => {
+                        fileLength += data.length;
+                        chunks.push(data);
+                    })
+                        .on('end', () => {
+                        const file = Buffer.concat(chunks, fileLength);
+                        resolve(file);
+                    });
+                    return;
+                }
+                return resolve(stream);
+            });
+        });
+    }
+    _getStats(objectHash) {
         return this.apiClient
             .object
             .statAsync(objectHash, { enc: 'base58' })
@@ -36,7 +84,7 @@ class IpfsApiHelper {
             return result;
         });
     }
-    update(hash, newData) {
+    updateObject(hash, newData) {
         return this.get(hash)
             .then((dataResponse) => {
             const updatedObject = Object.assign({}, dataResponse, newData);
@@ -53,65 +101,43 @@ class IpfsApiHelper {
             };
         });
     }
-    addFile(source) {
-        if (Array.isArray(source)) {
-            return this._addMultipleFiles(source);
+    resolve(path) {
+        if (is_ipfs_1.multihash(path)) {
+            return this.get(path);
         }
-        return this._addFile(source);
-    }
-    catFile(hashSource) {
-        if (Array.isArray(hashSource)) {
-            return this._addMultipleFiles(hashSource);
+        const nodes = statics_1.splitPath(path);
+        if (!is_ipfs_1.multihash(nodes[0])) {
+            return Promise.reject(new Error('Not a valid ipfs path'));
         }
-        return this._catFile(hashSource);
-    }
-    _addFile(source) {
-        const options = Object.assign({}, { isPath: false, recursive: false, followSymlinks: false }, source.options);
-        let contentBody = source.data;
-        if (options.recursive) {
-            options.isPath = true;
-        }
-        if (!options.isPath) {
-            contentBody = new Buffer(contentBody);
-        }
-        return this.apiClient.add(contentBody, options);
-    }
-    _addMultipleFiles(sources = []) {
-        let data = [];
-        sources.forEach((source) => {
-            data.push(this._addFile(source));
-        });
-        return Promise.all(data);
-    }
-    _catFile(source) {
-        if (!isIpfs.multihash(source.id)) {
-            throw new Error(`${source.id} not a multihash`);
-        }
-        let buf = new Buffer(0);
         return new Promise((resolve, reject) => {
-            return this.apiClient.cat(source.id).then((response) => {
-                if (response.readable) {
-                    return response.on('error', (err) => {
-                        return reject(err);
-                    }).on('data', (data) => {
-                        buf = Buffer.concat([buf, data]);
-                    }).on('end', () => {
-                        if (source.encoding) {
-                            return resolve(buf.toString(source.encoding));
-                        }
-                        return resolve(buf);
-                    });
+            this.get(nodes[0])
+                .then((response) => {
+                if (Buffer.isBuffer(response)) {
+                    return resolve(response);
                 }
-                return resolve(response);
-            }).catch((err) => reject(err));
+                let currentIndex = 1;
+                const step = (previousObj) => {
+                    const chunk = nodes[currentIndex];
+                    if (previousObj.hasOwnProperty(chunk)) {
+                        return reject(new Error('Path could not be resolved'));
+                    }
+                    if (currentIndex >= nodes.length) {
+                        return resolve(previousObj);
+                    }
+                    if (previousObj[chunk].hasOwnProperty(statics_1.LINK_SYMBOL)) {
+                        this.get(previousObj[chunk][statics_1.LINK_SYMBOL])
+                            .then((discoveredNode) => {
+                            currentIndex++;
+                            step(discoveredNode);
+                        })
+                            .catch((err) => reject(err));
+                        return;
+                    }
+                    return resolve(previousObj[chunk]);
+                };
+                return step(response);
+            });
         });
-    }
-    _catMultipleFiles(hashSources = []) {
-        let data = [];
-        hashSources.forEach((hash) => {
-            data.push(this._catFile(hash));
-        });
-        return Promise.all(data);
     }
 }
 exports.IpfsApiHelper = IpfsApiHelper;

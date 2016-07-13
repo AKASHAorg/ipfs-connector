@@ -1,7 +1,8 @@
 /// <reference path="../typings/main.d.ts"/>
 import * as Promise from 'bluebird';
-import * as isIpfs from 'is-ipfs';
-import {fromRawData, toDataBuffer, constructLink, fromRawObject} from './statics';
+import { fromRawData, toDataBuffer, fromRawObject, splitPath, LINK_SYMBOL } from './statics';
+import { multihash } from 'is-ipfs';
+import { Readable } from 'stream';
 
 export class IpfsApiHelper {
     public apiClient: any;
@@ -11,22 +12,35 @@ export class IpfsApiHelper {
      * Set ipfs-api object
      * @param provider
      */
-    constructor (provider: any) {
+    constructor(provider: any) {
         this.apiClient = provider;
     }
 
     /**
      *
      * @param data
-     * @returns {IDBRequest}
+     * @returns {any}
      */
-    add(data: Object) {
+    add(data: Object | Buffer) {
         let dataBuffer: Buffer;
-        dataBuffer = toDataBuffer(data);
-        if (dataBuffer.length > this.OBJECT_MAX_SIZE) {
-            return Promise.reject('Data is too big for an object, use file api instead');
+        if (Buffer.isBuffer(data)) {
+            dataBuffer = data;
+        } else {
+            dataBuffer = toDataBuffer(data);
         }
-        return this.apiClient.object.put(dataBuffer);
+        if (dataBuffer.length > this.OBJECT_MAX_SIZE) {
+            return this.apiClient
+                .addAsync(dataBuffer)
+                .then((file: any[]) => {
+                    return file[0].path;
+                });
+        }
+        return this.apiClient
+            .object
+            .putAsync(dataBuffer)
+            .then((dagNode: any) => {
+                return fromRawObject(dagNode).Hash;
+            });
     }
 
     /**
@@ -35,30 +49,76 @@ export class IpfsApiHelper {
      * @returns {Bluebird<U>}
      */
     get(objectHash: string) {
-        if (isIpfs.multihash(objectHash)) {
-            return this.apiClient
-                .object
-                .getAsync(objectHash, { enc: 'base58' })
-                .timeout(this.REQUEST_TIMEOUT)
-                .then((rawData: any) => {
-                    return fromRawData(rawData);
-                });
-        }
+        return this._getStats(objectHash)
+            .then((stats: any) => {
+                if (stats.NumLinks > 0) {
+                    return this.getFile(objectHash);
+                }
+                return this.getObject(objectHash);
+            });
     }
 
     /**
-     * @Todo: chain into .get object to resolve files
+     *
+     * @param objectHash
+     * @returns {Bluebird<U>|Thenable<U>|PromiseLike<TResult>|Promise<TResult>}
+     */
+    getObject(objectHash: string) {
+        return this.apiClient
+            .object
+            .getAsync(objectHash, { enc: 'base58' })
+            .timeout(this.REQUEST_TIMEOUT)
+            .then((rawData: any) => {
+                return fromRawData(rawData);
+            });
+    }
+
+    /**
+     *
+     * @param hash
+     * @returns {"~bluebird/bluebird".Bluebird}
+     */
+    getFile(hash: string) {
+        return new Promise((resolve, reject) => {
+            const chunks: Buffer[] = [];
+            let fileLength = 0;
+            return this.apiClient
+                .catAsync(hash)
+                .timeout(this.REQUEST_TIMEOUT)
+                .then((stream: Readable) => {
+                    if (stream.readable) {
+                        stream
+                            .on('error', (err: Error) => {
+                                return reject(err);
+                            })
+                            .on('data', (data: Buffer) => {
+                                fileLength += data.length;
+                                chunks.push(data);
+                            })
+                            .on('end', () => {
+                                const file = Buffer.concat(chunks, fileLength);
+                                resolve(file);
+                            });
+                        return;
+                    }
+                    return resolve(stream);
+                });
+        });
+
+    }
+
+    /**
      * @param objectHash
      * @returns {Promise<string|any|Object>|Thenable<string|any|Object>|Bluebird<string|any|Object>|PromiseLike<string|any|Object>}
      * @private
      */
-    private _hasChunks(objectHash: string) {
+    private _getStats(objectHash: string) {
         return this.apiClient
             .object
             .statAsync(objectHash, { enc: 'base58' })
             .timeout(this.REQUEST_TIMEOUT)
             .then((result: Object) => {
-               return result;
+                return result;
             });
     }
 
@@ -68,17 +128,17 @@ export class IpfsApiHelper {
      * @param newData
      * @returns {Thenable<{Data: any, Hash: any}>|PromiseLike<{Data: any, Hash: any}>|Bluebird<{Data: any, Hash: any}>}
      */
-    update(hash: string, newData: Object) {
+    updateObject(hash: string, newData: Object) {
 
         return this.get(hash)
             .then((dataResponse: Object) => {
                 const updatedObject = Object.assign({}, dataResponse, newData);
                 const dataBuffer = toDataBuffer(updatedObject);
-                    // this returns a DAGNode
-                    return this.apiClient
-                        .object
-                        .patch
-                        .setData(hash, dataBuffer, { enc: 'base58' });
+                // this returns a DAGNode
+                return this.apiClient
+                    .object
+                    .patch
+                    .setData(hash, dataBuffer, { enc: 'base58' });
             })
             .then((dagNode: any) => {
                 return {
@@ -89,115 +149,48 @@ export class IpfsApiHelper {
     }
 
     /**
-     * Add data to ipfs
-     * @param source
-     * @returns {Bluebird}
+     * @Todo: add some tests
+     * @param path
+     * @returns {any}
      */
-    public addFile (source: {
-        data: any,
-        options?: { isPath: boolean, recursive: boolean, followSymlinks: boolean }
-    }[]): Promise<{} | {}[]> {
-        if (Array.isArray(source)) {
-            return this._addMultipleFiles(source);
+    resolve(path: string) {
+        if (multihash(path)) {
+            return this.get(path);
         }
-        return this._addFile(source);
-    }
+        const nodes = splitPath(path);
 
-    /**
-     * Read data from ipfs
-     * @param hashSource
-     * @returns {Bluebird<any>}
-     */
-    public catFile (hashSource: {
-        id: string,
-        encoding?: string
-    }[]): Promise<{} | {}[]> {
-        if (Array.isArray(hashSource)) {
-            return this._addMultipleFiles(hashSource);
+        if (!multihash(nodes[0])) {
+            return Promise.reject(new Error('Not a valid ipfs path'));
         }
-        return this._catFile(hashSource);
-    }
-
-    /**
-     * Read data from ipfs
-     * @param source
-     * @returns {Bluebird}
-     * @private
-     */
-    private _addFile (source: any): Promise<{}> {
-        const options = Object.assign({},
-            { isPath: false, recursive: false, followSymlinks: false },
-            source.options);
-        let contentBody = source.data;
-        if (options.recursive) {
-            options.isPath = true;
-        }
-
-        if (!options.isPath) {
-            contentBody = new Buffer(contentBody);
-        }
-
-        return this.apiClient.add(contentBody, options);
-    }
-
-    /**
-     *
-     * @param sources
-     * @returns {Bluebird<any>}
-     * @private
-     */
-    private _addMultipleFiles (sources: {}[] = []): Promise<{}[]> {
-
-        let data: Promise<{}>[] = [];
-
-        sources.forEach((source) => {
-            data.push(this._addFile(source));
-        });
-
-        return Promise.all(data);
-    }
-
-    /**
-     *
-     * @param source
-     * @returns {Bluebird}
-     * @private
-     */
-    private _catFile (source: any): Promise<{}> {
-        if (!isIpfs.multihash(source.id)) {
-            throw new Error(`${source.id} not a multihash`);
-        }
-        let buf = new Buffer(0);
         return new Promise((resolve, reject) => {
-            return this.apiClient.cat(source.id).then((response: any) => {
-                if (response.readable) {
-                    return response.on('error', (err: Error) => {
-                        return reject(err);
-                    }).on('data', (data: Buffer) => {
-                        buf = Buffer.concat([buf, data]);
-                    }).on('end', () => {
-                        if (source.encoding) {
-                            return resolve(buf.toString(source.encoding));
+            this.get(nodes[0])
+                .then((response: any) => {
+                    if (Buffer.isBuffer(response)) {
+                        return resolve(response);
+                    }
+                    let currentIndex = 1;
+                    const step = (previousObj: any) => {
+                        const chunk = nodes[currentIndex];
+                        if (previousObj.hasOwnProperty(chunk)) {
+                            return reject(new Error('Path could not be resolved'));
                         }
-                        return resolve(buf);
-                    });
-                }
-                return resolve(response);
-            }).catch((err: Error) => reject(err));
-        });
-    }
+                        if (currentIndex >= nodes.length) {
+                            return resolve(previousObj);
+                        }
+                        if (previousObj[chunk].hasOwnProperty(LINK_SYMBOL)) {
+                            this.get(previousObj[chunk][LINK_SYMBOL])
+                                .then((discoveredNode: any) => {
+                                    currentIndex++;
+                                    step(discoveredNode);
+                                })
+                                .catch((err: any) => reject(err));
+                            return;
+                        }
+                        return resolve(previousObj[chunk]);
+                    };
+                    return step(response);
+                });
 
-    /**
-     *
-     * @param hashSources
-     * @returns {Bluebird<any>}
-     * @private
-     */
-    private _catMultipleFiles (hashSources: {}[] = []): Promise<{}[]> {
-        let data: Promise<{}>[] = [];
-        hashSources.forEach((hash) => {
-            data.push(this._catFile(hash));
         });
-        return Promise.all(data);
     }
 }

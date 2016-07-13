@@ -42,3 +42,13 @@ export function constructLink(hash: string) {
     }
     return null;
 }
+
+/**
+ *
+ * @param path
+ * @returns {string[]}
+ */
+export function splitPath (path: string) {
+    return path.replace(/^\//, '')
+        .replace(/([^\\])\//g, '$1\u000B').split('\u000B');
+}

@@ -4,9 +4,10 @@
   "description": "Ipfs download/process manager",
   "main": "index.js",
   "scripts": {
-    "test": "mocha tests/index.js",
+    "test": "./node_modules/istanbul/lib/cli.js cover ./node_modules/.bin/_mocha  ./tests/index.js",
     "docs": "typedoc index.ts --out docs",
-    "release": "standard-version"
+    "release": "standard-version",
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls"
   },
   "keywords": [
     "ipfs",
@@ -36,7 +37,10 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-as-promised": "^5.3.0",
-    "mocha": "^2.4.5",
+    "coveralls": "^2.11.11",
+    "istanbul": "^0.4.4",
+    "mocha": "^2.5.3",
+    "mocha-lcov-reporter": "^1.2.0",
     "rimraf": "^2.5.2",
     "standard-version": "^2.3.1",
     "tslint": "^3.10.1",

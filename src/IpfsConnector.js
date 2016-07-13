@@ -121,8 +121,10 @@ class IpfsConnector extends events_1.EventEmitter {
         this.process.stderr.on('data', logError);
         this.process.stdout.on('data', logInfo);
         this.once(constants_1.events.SERVICE_STOPPED, () => {
-            this.process.stderr.removeListener('data', logError);
-            this.process.stdout.removeListener('data', logInfo);
+            if (this.process) {
+                this.process.stderr.removeListener('data', logError);
+                this.process.stdout.removeListener('data', logInfo);
+            }
         });
     }
     stop(signal = 'SIGINT') {

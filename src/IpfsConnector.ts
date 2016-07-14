@@ -66,7 +66,7 @@ export class IpfsConnector extends EventEmitter {
         });
         this._callbacks.set('events.IPFS_INIT', (err: string) => {
             if (!err) {
-                this.start();
+                this._start();
             }
         });
         this._callbacks.set('events.SERVICE_FAILED', (message: string) => {
@@ -145,7 +145,7 @@ export class IpfsConnector extends EventEmitter {
              * @event IpfsConnector#DOWNLOAD_STARTED
              */
             this.emit(events.DOWNLOAD_STARTED);
-        }, 600);
+        }, 300);
         return this.downloadManager.check().then(data => {
             this.logger.info(`executing from ${data}`);
             return true;
@@ -170,18 +170,22 @@ export class IpfsConnector extends EventEmitter {
                      */
                     return this.emit(events.SERVICE_FAILED);
                 }
-                this.process = childProcess.spawn(
-                    this.downloadManager.wrapper.path(),
-                    this.options.args,
-                    this.options.extra
-                );
-                this.once(events.SERVICE_STARTED, () => {
-                    this._flushStartingEvents();
-                });
-                this._pipeStd();
-                this._attachStartingEvents();
+                this._start();
             }
         );
+    }
+
+    private _start() {
+        this.process = childProcess.spawn(
+            this.downloadManager.wrapper.path(),
+            this.options.args,
+            this.options.extra
+        );
+        this.once(events.SERVICE_STARTED, () => {
+            this._flushStartingEvents();
+        });
+        this._pipeStd();
+        this._attachStartingEvents();
     }
 
     /**

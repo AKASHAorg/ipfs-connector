@@ -6,6 +6,7 @@ class IpfsApiHelper {
     constructor(provider) {
         this.OBJECT_MAX_SIZE = 512 * 1024;
         this.REQUEST_TIMEOUT = 60 * 1000;
+        this.LINK_SYMBOL = '/';
         this.apiClient = provider;
     }
     add(data) {
@@ -106,6 +107,7 @@ class IpfsApiHelper {
             return this.get(path);
         }
         const nodes = statics_1.splitPath(path);
+        const pathLength = nodes.length - 1;
         if (!is_ipfs_1.multihash(nodes[0])) {
             return Promise.reject(new Error('Not a valid ipfs path'));
         }
@@ -118,14 +120,14 @@ class IpfsApiHelper {
                 let currentIndex = 1;
                 const step = (previousObj) => {
                     const chunk = nodes[currentIndex];
-                    if (previousObj.hasOwnProperty(chunk)) {
-                        return reject(new Error('Path could not be resolved'));
-                    }
-                    if (currentIndex >= nodes.length) {
+                    if (!chunk) {
                         return resolve(previousObj);
                     }
-                    if (previousObj[chunk].hasOwnProperty(statics_1.LINK_SYMBOL)) {
-                        this.get(previousObj[chunk][statics_1.LINK_SYMBOL])
+                    if (!previousObj.hasOwnProperty(chunk)) {
+                        return reject(new Error('Path could not be resolved'));
+                    }
+                    if (previousObj[chunk].hasOwnProperty(this.LINK_SYMBOL)) {
+                        this.get(previousObj[chunk][this.LINK_SYMBOL])
                             .then((discoveredNode) => {
                             currentIndex++;
                             step(discoveredNode);
@@ -133,10 +135,31 @@ class IpfsApiHelper {
                             .catch((err) => reject(err));
                         return;
                     }
-                    return resolve(previousObj[chunk]);
+                    if (currentIndex >= pathLength) {
+                        if (is_ipfs_1.multihash(previousObj[chunk])) {
+                            this.get(previousObj[chunk])
+                                .then((fetchedNode) => {
+                                resolve(fetchedNode);
+                            });
+                            return;
+                        }
+                        return resolve(previousObj[chunk]);
+                    }
+                    return reject(new Error('Invalid object path'));
                 };
                 return step(response);
             });
+        });
+    }
+    constructObjLink(data) {
+        const constructed = {};
+        if (is_ipfs_1.multihash(data)) {
+            constructed[this.LINK_SYMBOL] = data;
+            return Promise.resolve(constructed);
+        }
+        return this.add(data).then((hash) => {
+            constructed[this.LINK_SYMBOL] = hash;
+            return constructed;
         });
     }
 }

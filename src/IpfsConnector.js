@@ -41,7 +41,7 @@ class IpfsConnector extends events_1.EventEmitter {
         });
         this._callbacks.set('events.IPFS_INIT', (err) => {
             if (!err) {
-                this.start();
+                this._start();
             }
         });
         this._callbacks.set('events.SERVICE_FAILED', (message) => {
@@ -80,7 +80,7 @@ class IpfsConnector extends events_1.EventEmitter {
     checkExecutable() {
         const timeOut = setTimeout(() => {
             this.emit(constants_1.events.DOWNLOAD_STARTED);
-        }, 600);
+        }, 300);
         return this.downloadManager.check().then(data => {
             this.logger.info(`executing from ${data}`);
             return true;
@@ -95,13 +95,16 @@ class IpfsConnector extends events_1.EventEmitter {
             if (!binOk) {
                 return this.emit(constants_1.events.SERVICE_FAILED);
             }
-            this.process = childProcess.spawn(this.downloadManager.wrapper.path(), this.options.args, this.options.extra);
-            this.once(constants_1.events.SERVICE_STARTED, () => {
-                this._flushStartingEvents();
-            });
-            this._pipeStd();
-            this._attachStartingEvents();
+            this._start();
         });
+    }
+    _start() {
+        this.process = childProcess.spawn(this.downloadManager.wrapper.path(), this.options.args, this.options.extra);
+        this.once(constants_1.events.SERVICE_STARTED, () => {
+            this._flushStartingEvents();
+        });
+        this._pipeStd();
+        this._attachStartingEvents();
     }
     _attachStartingEvents() {
         this.process.stderr.on('data', this._callbacks.get('process.stderr.on'));

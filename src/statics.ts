@@ -1,7 +1,3 @@
-import * as isIpfs from 'is-ipfs';
-
-export const LINK_SYMBOL = '/';
-
 /**
  *
  * @param data
@@ -27,20 +23,6 @@ export function fromRawData(rawData: any) {
  */
 export function fromRawObject(rawObject: any) {
     return rawObject.toJSON();
-}
-
-/**
- *
- * @param hash
- * @returns {any}
- */
-export function constructLink(hash: string) {
-    const constructed = {};
-    if (isIpfs.multihash(hash)) {
-        constructed[LINK_SYMBOL] = hash;
-        return constructed;
-    }
-    return null;
 }
 
 /**

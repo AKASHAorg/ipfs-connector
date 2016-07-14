@@ -1,6 +1,6 @@
 /// <reference path="../typings/main.d.ts"/>
 import * as Promise from 'bluebird';
-import { fromRawData, toDataBuffer, fromRawObject, splitPath, LINK_SYMBOL } from './statics';
+import { fromRawData, toDataBuffer, fromRawObject, splitPath } from './statics';
 import { multihash } from 'is-ipfs';
 import { Readable } from 'stream';
 
@@ -8,6 +8,8 @@ export class IpfsApiHelper {
     public apiClient: any;
     public OBJECT_MAX_SIZE = 512 * 1024; // 512kb
     public REQUEST_TIMEOUT = 60 * 1000; // 60s
+    public LINK_SYMBOL = '/';
+
     /**
      * Set ipfs-api object
      * @param provider
@@ -149,7 +151,7 @@ export class IpfsApiHelper {
     }
 
     /**
-     * @Todo: add some tests
+     *
      * @param path
      * @returns {any}
      */
@@ -158,7 +160,7 @@ export class IpfsApiHelper {
             return this.get(path);
         }
         const nodes = splitPath(path);
-
+        const pathLength = nodes.length - 1;
         if (!multihash(nodes[0])) {
             return Promise.reject(new Error('Not a valid ipfs path'));
         }
@@ -171,14 +173,15 @@ export class IpfsApiHelper {
                     let currentIndex = 1;
                     const step = (previousObj: any) => {
                         const chunk = nodes[currentIndex];
-                        if (previousObj.hasOwnProperty(chunk)) {
-                            return reject(new Error('Path could not be resolved'));
-                        }
-                        if (currentIndex >= nodes.length) {
+                        if (!chunk) {
                             return resolve(previousObj);
                         }
-                        if (previousObj[chunk].hasOwnProperty(LINK_SYMBOL)) {
-                            this.get(previousObj[chunk][LINK_SYMBOL])
+                        if (!previousObj.hasOwnProperty(chunk)) {
+                            return reject(new Error('Path could not be resolved'));
+                        }
+                        // is a link
+                        if (previousObj[chunk].hasOwnProperty(this.LINK_SYMBOL)) {
+                            this.get(previousObj[chunk][this.LINK_SYMBOL])
                                 .then((discoveredNode: any) => {
                                     currentIndex++;
                                     step(discoveredNode);
@@ -186,11 +189,37 @@ export class IpfsApiHelper {
                                 .catch((err: any) => reject(err));
                             return;
                         }
-                        return resolve(previousObj[chunk]);
+                        if (currentIndex >= pathLength) {
+                            if (multihash(previousObj[chunk])) {
+                                this.get(previousObj[chunk])
+                                    .then((fetchedNode: any) => {
+                                        resolve(fetchedNode);
+                                    });
+                                return;
+                            }
+                            return resolve(previousObj[chunk]);
+                        }
+                        return reject(new Error('Invalid object path'));
                     };
                     return step(response);
                 });
+        });
+    }
 
+    /**
+     *
+     * @param data
+     * @returns {any}
+     */
+    public constructObjLink(data: any) {
+        const constructed = {};
+        if (multihash(data)) {
+            constructed[this.LINK_SYMBOL] = data;
+            return Promise.resolve(constructed);
+        }
+        return this.add(data).then((hash: string) => {
+            constructed[this.LINK_SYMBOL] = hash;
+            return constructed;
         });
     }
 }

@@ -27,40 +27,47 @@ describe('IpfsConnector', function () {
             })
         ]
     });
-    this.timeout(0);
+    this.timeout(60000);
     before(function (done) {
         instance.setBinPath(binTarget);
         rimraf(binTarget, function () {
             done();
         });
     });
-    it('can set .ipfs init folder', function () {
+    it('should set .ipfs init folder', function () {
         const target = path.join(binTarget, 'ipfsTest');
         instance.setIpfsFolder(target);
         expect(instance.options.extra.env.IPFS_PATH).to.equal(target);
     });
-    it('can set a different logger', function () {
+    it('should set a different logger', function () {
         instance.setLogger(logger);
         expect(instance.logger).to.equal(logger);
     });
-    it('emits downloading binaries', function (done) {
-        let triggered;
-        instance.once(constants.events.DOWNLOAD_STARTED, function () {
+    it('should emit when downloading binaries', function (done) {
+        let triggered = false;
+        instance.once(constants.events.DOWNLOAD_STARTED, () => {
             triggered = true;
         });
         instance.checkExecutable().then(()=> {
             expect(triggered).to.be.true;
             done();
+        }).catch((err) => {
+            expect(triggered).to.be.true;
+            done();
         });
     });
-    it('starts ipfs daemon', function (done) {
+    it('should start ipfs daemon', function (done) {
         instance.setLogger(console);
         instance.on(constants.events.SERVICE_STARTED, function () {
             done();
         });
         instance.start();
     });
-    it('adds object to ipfs', function (done) {
+    it('should set config key for spawned process', function () {
+        instance.setConfig('retry', 1);
+        expect(instance.options.retry).to.equal(1);
+    });
+    it('should add an object to ipfs', function (done) {
         expect(instance.api).to.be.defined;
         instance.api.add({ data: '{}' })
             .then((hash) => {
@@ -76,7 +83,14 @@ describe('IpfsConnector', function () {
             done();
         });
     });
-    it('updates from existing object', function (done) {
+    it('should add buffer to ipfs', function (done) {
+        const actual = Buffer.from(JSON.stringify({ a: 1, b: 2 }));
+        instance.api.add(actual).then(hash=> {
+            expect(hash).to.be.defined;
+            done();
+        });
+    });
+    it('should update from existing object', function (done) {
         const initialObj = { a: 1, b: 2 };
         instance.api.add(initialObj)
             .then((hash) => {
@@ -92,7 +106,7 @@ describe('IpfsConnector', function () {
                 }).catch(err => console.log(err));
             });
     });
-    it('splits when object is too big', function (done) {
+    it('should split when object is too big', function (done) {
         instance.api.add(bigObject)
             .then(hash => {
                 instance.api._getStats(hash).then((stats) => {
@@ -105,7 +119,7 @@ describe('IpfsConnector', function () {
                 done();
             });
     });
-    it('reads big file', function (done) {
+    it('should read big file', function (done) {
         instance.api
             .get("QmYZ63vj8KjipwiSKGatx7g8J5sWu6FyNqSUb88MRNAS9N")
             .then(bigBuffer=> {
@@ -113,7 +127,7 @@ describe('IpfsConnector', function () {
                 done();
             })
     });
-    it('constructs object link from hash', function (done) {
+    it('should construct object link from hash', function (done) {
         const expected = {};
         expected[instance.api.LINK_SYMBOL] = "QmYZ63vj8KjipwiSKGatx7g8J5sWu6FyNqSUb88MRNAS9N";
         instance.api
@@ -127,7 +141,7 @@ describe('IpfsConnector', function () {
                 done();
             });
     });
-    it('constructs object link from source', function (done) {
+    it('should construct object link from source', function (done) {
         const inputObj = {
             a: 1,
             b: 2
@@ -161,8 +175,8 @@ describe('IpfsConnector', function () {
             steps.push(instance.api.resolve(`${hash}/c/c1`));
             checks.push(subLevels[0].c1);
 
-             steps.push(instance.api.resolve(`${hash}/d/d2`));
-             checks.push(bigObject);
+            steps.push(instance.api.resolve(`${hash}/d/d2`));
+            checks.push(bigObject);
 
             steps.push(instance.api.resolve(`${hash}/d/d1`));
             checks.push(subLevels[1].d1);
@@ -196,6 +210,44 @@ describe('IpfsConnector', function () {
         ).then((hash) => {
             return runChecks(hash);
         })
+    });
+    it('should resolve ipfs hash simple path', function (done) {
+        instance.api
+            .resolve('QmTCMGWApewThNp64JBg9yzhiZGKKDHigS2Y45Tyg1HG8r')
+            .then(data=> {
+                expect(data).to.deep.equal({ c1: 5, c2: 6 });
+                done();
+            });
+    });
+
+    it('should reject when root hash is an not ipfs hash', function (done) {
+        instance.api
+            .resolve('QmTCMGWApewThNp64JBg9yzhiZGKKDHigS2Y45Tyg1H/data/aa')
+            .then(data=> {
+                expect(data).to.be.undefined;
+                done();
+            })
+            .catch(err=> {
+                expect(err).to.be.defined;
+                done();
+            });
+    });
+
+    it('should reject when path cant be resolved', function (done) {
+        instance.api
+            .resolve('QmTCMGWApewThNp64JBg9yzhiZGKKDHigS2Y45Tyg1HG8r/c3')
+            .then(data=> {
+                expect(data).to.be.undefined;
+                done();
+            })
+            .catch(err=> {
+                expect(err).to.be.defined;
+                done();
+            });
+    });
+
+    it('should remove ipfs binary file', function (done) {
+        instance.downloadManager.deleteBin().then(()=> done());
     });
     after(function (done) {
         instance.stop();

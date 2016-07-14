@@ -10,7 +10,7 @@ Some of the differences:
 - Able to specify init folder
 - Promised based, no callbacks 
 - Connector can be accessed from anywhere inside the app as it is a singleton
-- Plug your favorite logging library (by default console). See [tests folder](https://github.com/AkashaProject/ipfs-connector/tree/master/tests) for Winston examples
+- Plug your favorite logging library (by default console). See [tests folder](https://github.com/AkashaProject/ipfs-connector/tree/master/tests)
 
 For more information please see the [API docs](http://docs.akasha.world/ipfs-connector/index.html)
 
@@ -28,9 +28,16 @@ instance.stop()
 
 // see api docs
 // add data to ipfs
-instance.api.add(...)
+instance.api.add(object | Buffer)
+
 // read data from ipfs
-instance.api.cat(...)
+instance.api.get('ipfs hash')
+
+// resolve ipfs hash object paths(see tests)
+instance.api.resolve('QmTCMGWApewThNp64JBg9yzhiZGKKDHigS2Y45Tyg1HG8r/c1')
+
+// access default js-ipfs-api from
+instance.api.apiClient
 ```
 Dev
 ```
@@ -41,7 +48,7 @@ cd ipfs-connector
 npm install
 
 // run tests
-npm run test
+npm test
 
 // generate docs
 npm run docs

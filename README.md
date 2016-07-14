@@ -53,3 +53,6 @@ npm test
 // generate docs
 npm run docs
 ```
+[CHANGELOG](CHANGELOG.md)
+
+[LICENSE](LICENSE.md)

@@ -4,7 +4,6 @@ const path = require('path');
 const fs = require('fs');
 const chai = require('chai');
 const rimraf = require('rimraf');
-const winston = require('winston');
 const constants = require('../src/constants');
 const bigObject = require('./stubs/bigObject.json');
 const expect = chai.expect;
@@ -13,20 +12,11 @@ describe('IpfsConnector', function () {
     let instance = IpfsConnector.getInstance();
     let binTarget = path.join(__dirname, 'bin');
     let filePath = path.join(__dirname, 'stubs', 'example.json');
-    const logger = new (winston.Logger)({
-        transports: [
-            new (winston.transports.File)({
-                name: 'info',
-                filename: path.join(binTarget, 'info.log'),
-                level: 'info'
-            }),
-            new (winston.transports.File)({
-                name: 'error',
-                filename: path.join(binTarget, 'error.log'),
-                level: 'error'
-            })
-        ]
-    });
+	const logger = {
+		info: function () {},
+		error: function () {},
+        warn: function () {}
+    };
     this.timeout(60000);
     before(function (done) {
         instance.setBinPath(binTarget);
@@ -41,7 +31,7 @@ describe('IpfsConnector', function () {
     });
     it('should set a different logger', function () {
         instance.setLogger(logger);
-        expect(instance.logger).to.equal(logger);
+        expect(instance.logger).to.deep.equal(logger);
     });
     it('should emit when downloading binaries', function (done) {
         let triggered = false;

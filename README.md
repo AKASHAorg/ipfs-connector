@@ -14,9 +14,14 @@ Some of the differences:
 
 For more information please see the [API docs](http://docs.akasha.world/ipfs-connector/index.html)
 
+### Installation
+```
+npm install @akashaproject/ipfs-connector --save
+```
 
+### Usage
 ```javascript
-import { IpfsConnector } from 'ipfs-connector';
+import { IpfsConnector } from '@akashaproject/ipfs-connector';
 
 const instance = IpfsConnector.getInstance();
 
@@ -39,7 +44,7 @@ instance.api.resolve('QmTCMGWApewThNp64JBg9yzhiZGKKDHigS2Y45Tyg1HG8r/c1')
 // access default js-ipfs-api from
 instance.api.apiClient
 ```
-Dev
+### Dev
 ```
 git clone https://github.com/AkashaProject/ipfs-connector.git
 cd ipfs-connector

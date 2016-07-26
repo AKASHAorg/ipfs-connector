@@ -6,3 +6,7 @@ tests
 tsconfig.json
 tslint.json
 typings.json
+bin
+docs
+node_modules
+*.log

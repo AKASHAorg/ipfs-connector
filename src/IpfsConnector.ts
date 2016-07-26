@@ -17,6 +17,7 @@ export class IpfsConnector extends EventEmitter {
     private process: childProcess.ChildProcess;
     private downloadManager = new IpfsBin();
     public options = options;
+    public serviceStatus: { api: boolean, process: boolean } = {process: false, api: false};
     private _callbacks = new Map();
     private logger: any = console;
     private _api: IpfsApiHelper;
@@ -36,6 +37,7 @@ export class IpfsConnector extends EventEmitter {
                  */
                 return this.emit(events.SERVICE_STARTED);
             }
+            this.serviceStatus.process = false;
             /**
              * @event IpfsConnector#SERVICE_FAILED
              */
@@ -43,6 +45,7 @@ export class IpfsConnector extends EventEmitter {
         });
         this._callbacks.set('process.stdout.on', (data: string) => {
             if (data.includes('Daemon is ready')) {
+                this.serviceStatus.process = true;
                 /**
                  * @event IpfsConnector#SERVICE_STARTED
                  */
@@ -57,6 +60,7 @@ export class IpfsConnector extends EventEmitter {
                      */
                     return this.emit(events.IPFS_INIT);
                 }
+                this.serviceStatus.process = false;
                 this.logger.error(stderr);
                 // init exited with errors
                 return this.emit(events.IPFS_INIT, stderr.toString());
@@ -94,6 +98,13 @@ export class IpfsConnector extends EventEmitter {
     get api(): IpfsApiHelper {
         if (!this._api) {
             let api = ipfsApi(this.options.apiAddress);
+            api.version()
+                .then((data: any) => this.serviceStatus.api = true)
+                .catch((err: Error) => {
+                    this.serviceStatus.api = false;
+                    this._api = null;
+                    this.emit(events.ERROR, err.message);
+                });
             api.object = Promise.promisifyAll(api.object);
             api = Promise.promisifyAll(api);
             this._api = new IpfsApiHelper(api);
@@ -237,10 +248,12 @@ export class IpfsConnector extends EventEmitter {
         this.emit(events.SERVICE_STOPPING);
         this._api = null;
         this.options.retry = true;
+        this.serviceStatus.api = false;
         if (this.process) {
             this.process.once('exit', () => this.emit(events.SERVICE_STOPPED));
             this.process.kill(signal);
             this.process = null;
+            this.serviceStatus.process = false;
             return this;
         }
         this.emit(events.SERVICE_STOPPED);

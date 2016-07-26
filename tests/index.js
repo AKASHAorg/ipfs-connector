@@ -12,10 +12,13 @@ describe('IpfsConnector', function () {
     let instance = IpfsConnector.getInstance();
     let binTarget = path.join(__dirname, 'bin');
     let filePath = path.join(__dirname, 'stubs', 'example.json');
-	const logger = {
-		info: function () {},
-		error: function () {},
-        warn: function () {}
+    const logger = {
+        info: function () {
+        },
+        error: function () {
+        },
+        warn: function () {
+        }
     };
     this.timeout(60000);
     before(function (done) {
@@ -33,6 +36,18 @@ describe('IpfsConnector', function () {
         instance.setLogger(logger);
         expect(instance.logger).to.deep.equal(logger);
     });
+    it('should emit error when specifying bad ipfs-api address', function (done) {
+        const memAddr = instance.options.apiAddress;
+        instance.options.apiAddress = 'Qmxf09FAke';
+        instance.once(constants.events.ERROR, (message) => {
+            expect(message).to.be.defined;
+            expect(instance.serviceStatus.api).to.be.false;
+            instance.options.apiAddress = memAddr;
+            done();
+        });
+        const api = instance.api;
+        expect(api).to.be.an('object');
+    });
     it('should emit when downloading binaries', function (done) {
         let triggered = false;
         instance.once(constants.events.DOWNLOAD_STARTED, () => {
@@ -49,6 +64,7 @@ describe('IpfsConnector', function () {
     it('should start ipfs daemon', function (done) {
         instance.setLogger(console);
         instance.on(constants.events.SERVICE_STARTED, function () {
+            expect(instance.serviceStatus.process).to.be.true;
             done();
         });
         instance.start();
@@ -69,6 +85,7 @@ describe('IpfsConnector', function () {
                     throw new Error(err);
                 });
             }).catch(err => {
+            console.log(err);
             expect(err).to.be.undefined;
             done();
         });

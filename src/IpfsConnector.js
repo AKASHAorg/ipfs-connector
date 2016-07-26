@@ -13,6 +13,7 @@ class IpfsConnector extends events_1.EventEmitter {
         super();
         this.downloadManager = new IpfsBin_1.IpfsBin();
         this.options = constants_1.options;
+        this.serviceStatus = { process: false, api: false };
         this._callbacks = new Map();
         this.logger = console;
         if (enforcer !== symbolEnforcer) {
@@ -22,10 +23,12 @@ class IpfsConnector extends events_1.EventEmitter {
             if (data.toString().includes('daemon is running')) {
                 return this.emit(constants_1.events.SERVICE_STARTED);
             }
+            this.serviceStatus.process = false;
             return this.emit(constants_1.events.SERVICE_FAILED, data);
         });
         this._callbacks.set('process.stdout.on', (data) => {
             if (data.includes('Daemon is ready')) {
+                this.serviceStatus.process = true;
                 return this.emit(constants_1.events.SERVICE_STARTED);
             }
         });
@@ -34,6 +37,7 @@ class IpfsConnector extends events_1.EventEmitter {
                 if (stderr.toString().includes('file already exists')) {
                     return this.emit(constants_1.events.IPFS_INIT);
                 }
+                this.serviceStatus.process = false;
                 this.logger.error(stderr);
                 return this.emit(constants_1.events.IPFS_INIT, stderr.toString());
             }
@@ -59,6 +63,13 @@ class IpfsConnector extends events_1.EventEmitter {
     get api() {
         if (!this._api) {
             let api = ipfsApi(this.options.apiAddress);
+            api.version()
+                .then((data) => this.serviceStatus.api = true)
+                .catch((err) => {
+                this.serviceStatus.api = false;
+                this._api = null;
+                this.emit(constants_1.events.ERROR, err.message);
+            });
             api.object = Promise.promisifyAll(api.object);
             api = Promise.promisifyAll(api);
             this._api = new IpfsApiHelper_1.IpfsApiHelper(api);
@@ -134,10 +145,12 @@ class IpfsConnector extends events_1.EventEmitter {
         this.emit(constants_1.events.SERVICE_STOPPING);
         this._api = null;
         this.options.retry = true;
+        this.serviceStatus.api = false;
         if (this.process) {
             this.process.once('exit', () => this.emit(constants_1.events.SERVICE_STOPPED));
             this.process.kill(signal);
             this.process = null;
+            this.serviceStatus.process = false;
             return this;
         }
         this.emit(constants_1.events.SERVICE_STOPPED);

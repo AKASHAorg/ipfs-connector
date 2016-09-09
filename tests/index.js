@@ -220,7 +220,7 @@ describe('IpfsConnector', function () {
                     });
                 })
         };
-        return Promise.all(pool).then(
+        Promise.all(pool).then(
             (links) => {
                 [inputLink.c, inputLink.d] = links;
                 const constructedObj = Object.assign({}, inputObj, inputLink);

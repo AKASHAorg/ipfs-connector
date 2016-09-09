@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.1.0"></a>
+# [1.1.0](https://github.com/AkashaProject/ipfs-connector/compare/v1.0.6...v1.1.0) (2016-09-09)
+
+
+### Features
+
+* **fileApi:** add wrapper ([ac3386e](https://github.com/AkashaProject/ipfs-connector/commit/ac3386e))
+
+
+
 <a name="1.0.6"></a>
 ## [1.0.6](https://github.com/AkashaProject/ipfs-connector/compare/v1.0.5...v1.0.6) (2016-07-26)
 

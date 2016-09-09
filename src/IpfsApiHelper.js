@@ -18,17 +18,20 @@ class IpfsApiHelper {
             dataBuffer = statics_1.toDataBuffer(data);
         }
         if (dataBuffer.length > this.OBJECT_MAX_SIZE) {
-            return this.apiClient
-                .addAsync(dataBuffer)
-                .then((file) => {
-                return file[0].path;
-            });
+            return this.addFile(dataBuffer);
         }
         return this.apiClient
             .object
             .putAsync(dataBuffer)
             .then((dagNode) => {
             return statics_1.fromRawObject(dagNode).Hash;
+        });
+    }
+    addFile(dataBuffer) {
+        return this.apiClient
+            .addAsync(dataBuffer)
+            .then((file) => {
+            return file[0].path;
         });
     }
     get(objectHash) {

@@ -49,8 +49,9 @@ describe('IpfsConnector', function () {
         expect(api).to.be.an('object');
     });
     it('should emit when downloading binaries', function (done) {
+        this.timeout(120000);
         let triggered = false;
-        instance.once(constants.events.DOWNLOAD_STARTED, () => {
+        instance.on(constants.events.DOWNLOAD_STARTED, () => {
             triggered = true;
         });
         instance.checkExecutable().then(()=> {
@@ -147,6 +148,18 @@ describe('IpfsConnector', function () {
                 expect(err).to.be.undefined;
                 done();
             });
+    });
+    it('should add file to ipfs', function (done) {
+       const file = fs.readFileSync(filePath);
+        instance.api
+            .addFile(file)
+            .then((result)=> {
+                expect(result).to.exist;
+            })
+            .catch((err)=> {
+                expect(err).not.to.exist;
+            })
+            .finally(() => done());
     });
     it('should construct object link from source', function (done) {
         const inputObj = {

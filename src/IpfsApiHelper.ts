@@ -31,17 +31,26 @@ export class IpfsApiHelper {
             dataBuffer = toDataBuffer(data);
         }
         if (dataBuffer.length > this.OBJECT_MAX_SIZE) {
-            return this.apiClient
-                .addAsync(dataBuffer)
-                .then((file: any[]) => {
-                    return file[0].path;
-                });
+            return this.addFile(dataBuffer);
         }
         return this.apiClient
             .object
             .putAsync(dataBuffer)
             .then((dagNode: any) => {
                 return fromRawObject(dagNode).Hash;
+            });
+    }
+
+    /**
+     *
+     * @param dataBuffer
+     * @returns {Bluebird}
+     */
+    addFile(dataBuffer: Buffer) {
+        return this.apiClient
+            .addAsync(dataBuffer)
+            .then((file: any[]) => {
+                return file[0].path;
             });
     }
 

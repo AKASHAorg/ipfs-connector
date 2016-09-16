@@ -12,6 +12,7 @@ describe('IpfsConnector', function () {
     let instance = IpfsConnector.getInstance();
     let binTarget = path.join(__dirname, 'bin');
     let filePath = path.join(__dirname, 'stubs', 'example.json');
+    let rootHash = '';
     const logger = {
         info: function () {
         },
@@ -228,6 +229,7 @@ describe('IpfsConnector', function () {
                 return instance.api.add(constructedObj);
             }
         ).then((hash) => {
+            rootHash = hash;
             return runChecks(hash);
         })
     });

@@ -13,7 +13,13 @@ export function toDataBuffer(data: Object) {
  * @returns {any}
  */
 export function fromRawData(rawData: any) {
-    return JSON.parse(rawData.toJSON().Data);
+    let data: any;
+    try {
+        data = JSON.parse(rawData.toJSON().Data);
+    } catch (err) {
+        data = rawData.toJSON().Data;
+    }
+    return data;
 }
 
 /**

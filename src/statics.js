@@ -4,7 +4,14 @@ function toDataBuffer(data) {
 }
 exports.toDataBuffer = toDataBuffer;
 function fromRawData(rawData) {
-    return JSON.parse(rawData.toJSON().Data);
+    let data;
+    try {
+        data = JSON.parse(rawData.toJSON().Data);
+    }
+    catch (err) {
+        data = rawData.toJSON().Data;
+    }
+    return data;
 }
 exports.fromRawData = fromRawData;
 function fromRawObject(rawObject) {

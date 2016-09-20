@@ -5,7 +5,7 @@ import { unlink } from 'fs';
 import Wrapper = require('bin-wrapper');
 import path = require('path');
 
-const  version  = '0.4.1';
+const  version  = '0.4.3';
 const base: string = `http://dist.ipfs.io/go-ipfs/v${version}/go-ipfs_v${version}_`;
 const defaultTarget = path.join(__dirname, 'bin');
 

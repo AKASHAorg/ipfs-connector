@@ -3,7 +3,7 @@ const Promise = require('bluebird');
 const fs_1 = require('fs');
 const Wrapper = require('bin-wrapper');
 const path = require('path');
-const version = '0.4.1';
+const version = '0.4.3';
 const base = `http://dist.ipfs.io/go-ipfs/v${version}/go-ipfs_v${version}_`;
 const defaultTarget = path.join(__dirname, 'bin');
 class IpfsBin {

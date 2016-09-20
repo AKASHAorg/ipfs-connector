@@ -12,6 +12,7 @@ describe('IpfsConnector', function () {
     let instance = IpfsConnector.getInstance();
     let binTarget = path.join(__dirname, 'bin');
     let filePath = path.join(__dirname, 'stubs', 'example.json');
+    let bigObjHash = '';
     let rootHash = '';
     const logger = {
         info: function () {
@@ -118,19 +119,21 @@ describe('IpfsConnector', function () {
     it('should split when object is too big', function (done) {
         instance.api.add(bigObject)
             .then(hash => {
+                bigObjHash = hash;
                 instance.api._getStats(hash).then((stats) => {
                     expect(stats.NumLinks).to.be.above(0);
                     done();
                 });
             })
             .catch(err => {
+                console.log(err.message);
                 expect(err).to.be.undefined;
                 done();
             });
     });
     it('should read big file', function (done) {
         instance.api
-            .get("QmYZ63vj8KjipwiSKGatx7g8J5sWu6FyNqSUb88MRNAS9N")
+            .get(bigObjHash)
             .then(bigBuffer=> {
                 expect(bigBuffer.length).to.equal(Buffer.from(JSON.stringify(bigObject)).length);
                 done();
@@ -138,9 +141,9 @@ describe('IpfsConnector', function () {
     });
     it('should construct object link from hash', function (done) {
         const expected = {};
-        expected[instance.api.LINK_SYMBOL] = "QmYZ63vj8KjipwiSKGatx7g8J5sWu6FyNqSUb88MRNAS9N";
+        expected[instance.api.LINK_SYMBOL] = bigObjHash;
         instance.api
-            .constructObjLink("QmYZ63vj8KjipwiSKGatx7g8J5sWu6FyNqSUb88MRNAS9N")
+            .constructObjLink(bigObjHash)
             .then((result)=> {
                 expect(result).to.deep.equal(expected);
                 done();
@@ -167,10 +170,10 @@ describe('IpfsConnector', function () {
             a: 1,
             b: 2
         };
-        const inputLink = { c: '', d: '', e: 'QmYZ63vj8KjipwiSKGatx7g8J5sWu6FyNqSUb88MRNAS9N' };
+        const inputLink = { c: '', d: '', e: bigObjHash };
         const subLevels = [{ c1: 5, c2: 6 }, {
             d1: 'sdasdsadsad',
-            d2: 'QmYZ63vj8KjipwiSKGatx7g8J5sWu6FyNqSUb88MRNAS9N'
+            d2: bigObjHash
         }];
         let pool = subLevels.map(
             (plainObj) => {
@@ -181,8 +184,8 @@ describe('IpfsConnector', function () {
             a: 1,
             b: 2,
             c: { '/': 'QmTCMGWApewThNp64JBg9yzhiZGKKDHigS2Y45Tyg1HG8r' },
-            d: { '/': 'QmV3SDTMn98nvzPTWmgzGDxc8AcYsrKRQ2zG5Ck6cuC2QY' },
-            e: 'QmYZ63vj8KjipwiSKGatx7g8J5sWu6FyNqSUb88MRNAS9N'
+            d: { '/': 'QmQZe3rajd2VVF4vX8oaZCZBw1YLhH916L1xNjGVd9B8E4' },
+            e: bigObjHash
         };
         const runChecks = (hash) => {
             const steps = [];

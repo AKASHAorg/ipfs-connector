@@ -4,7 +4,7 @@ const statics_1 = require('./statics');
 const is_ipfs_1 = require('is-ipfs');
 class IpfsApiHelper {
     constructor(provider) {
-        this.OBJECT_MAX_SIZE = 512 * 1024;
+        this.OBJECT_MAX_SIZE = 1.5 * 1024 * 1024;
         this.REQUEST_TIMEOUT = 60 * 1000;
         this.LINK_SYMBOL = '/';
         this.apiClient = provider;

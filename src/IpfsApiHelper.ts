@@ -6,7 +6,7 @@ import { Readable } from 'stream';
 
 export class IpfsApiHelper {
     public apiClient: any;
-    public OBJECT_MAX_SIZE = 512 * 1024; // 512kb
+    public OBJECT_MAX_SIZE = 1.5 * 1024 * 1024; // 1.5mb
     public REQUEST_TIMEOUT = 60 * 1000; // 60s
     public LINK_SYMBOL = '/';
 

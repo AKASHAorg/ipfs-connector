@@ -3,6 +3,7 @@ import * as Promise from 'bluebird';
 import { fromRawData, toDataBuffer, fromRawObject, splitPath } from './statics';
 import { multihash } from 'is-ipfs';
 import { Readable } from 'stream';
+import set = Reflect.set;
 
 export class IpfsApiHelper {
     public apiClient: any;

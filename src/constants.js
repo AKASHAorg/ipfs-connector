@@ -18,7 +18,7 @@ exports.options = {
     args: ['daemon'],
     executable: '',
     extra: {
-        env: Object.assign({}, process.env, { IPFS_PATH: path_1.join(os_1.homedir(), '.ipfs') }),
+        env: Object.assign({}, { IPFS_PATH: path_1.join(os_1.homedir(), '.ipfs') }),
         detached: true
     }
 };

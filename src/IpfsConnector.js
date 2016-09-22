@@ -106,7 +106,17 @@ class IpfsConnector extends events_1.EventEmitter {
             if (!binOk) {
                 return this.emit(constants_1.events.SERVICE_FAILED);
             }
-            this._start();
+            childProcess.exec(`${this.downloadManager.wrapper.path()} config Addresses.API`, { env: constants_1.options.extra.env }, (error, apiAddress, stderr) => {
+                if (error) {
+                    this.logger.error(error);
+                }
+                if (stderr.includes('ipfs init')) {
+                    this._init();
+                    return Promise.delay(3000).then(() => this.start());
+                }
+                constants_1.options.apiAddress = apiAddress.trim();
+                return this._start();
+            });
         });
     }
     _start() {
@@ -160,6 +170,42 @@ class IpfsConnector extends events_1.EventEmitter {
         let init = childProcess.exec(this.downloadManager.wrapper.path() + ' init', { env: this.options.extra.env }, this._callbacks.get('ipfs.init'));
         this.options.retry = false;
         this.process = null;
+    }
+    getPorts() {
+        return this.api.apiClient
+            .config.get('Addresses')
+            .then((config) => {
+            const { Swarm, API, Gateway } = config;
+            const swarm = Swarm[0].split('/').pop();
+            const api = API.split('/').pop();
+            const gateway = Gateway.split('/').pop();
+            return { gateway: gateway, api: api, swarm: swarm };
+        });
+    }
+    setPorts(ports, restart = false) {
+        const setup = [];
+        if (ports.hasOwnProperty('gateway')) {
+            setup.push(this.api.apiClient
+                .config.set('Addresses.Gateway', `/ip4/127.0.0.1/tcp/${ports.gateway}`));
+        }
+        if (ports.hasOwnProperty('api')) {
+            setup.push(this.api.apiClient
+                .config.set('Addresses.API', `/ip4/127.0.0.1/tcp/${ports.api}`));
+        }
+        if (ports.hasOwnProperty('swarm')) {
+            setup.push(this.api.apiClient
+                .config.set('Addresses.Swarm', [`/ip4/0.0.0.0/tcp/${ports.swarm}`, `/ip6/::/tcp/${ports.swarm}`]));
+        }
+        return Promise.all(setup).then((set) => {
+            if (restart) {
+                return Promise.resolve(this.stop()).delay(2000)
+                    .then(() => {
+                    this.start();
+                    return Promise.delay(3000).then(() => set);
+                });
+            }
+            return set;
+        });
     }
 }
 exports.IpfsConnector = IpfsConnector;

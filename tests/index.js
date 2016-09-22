@@ -65,8 +65,7 @@ describe('IpfsConnector', function () {
         });
     });
     it('should start ipfs daemon', function (done) {
-        instance.setLogger(console);
-        instance.on(constants.events.SERVICE_STARTED, function () {
+        instance.once(constants.events.SERVICE_STARTED, function () {
             expect(instance.serviceStatus.process).to.be.true;
             done();
         });
@@ -76,6 +75,45 @@ describe('IpfsConnector', function () {
         instance.setConfig('retry', 1);
         expect(instance.options.retry).to.equal(1);
     });
+    it('should get ipfs config addresses', function (done) {
+        expect(instance.api).to.exist;
+        instance.getPorts().then((ports) => {
+            expect(ports).to.exist;
+            done();
+        });
+    });
+    it('should set ipfs GATEWAY port', function (done) {
+       instance.setPorts({gateway: 8092}).then((ports) => {
+           expect(ports).to.exist;
+           done();
+       });
+    });
+
+    it('should set ipfs API port', function (done) {
+        instance.setPorts({api: 5041}).then((ports) => {
+            expect(ports).to.exist;
+            done();
+        });
+    });
+
+    it('should set ipfs SWARM port', function (done) {
+        instance.setPorts({swarm: 4041}).then((ports) => {
+            expect(ports).to.exist;
+            done();
+        });
+    });
+
+    it('should restart after setting ports', function (done) {
+        instance.once(constants.events.SERVICE_STARTED, function () {
+            expect(instance.serviceStatus.process).to.be.true;
+            done();
+        });
+       instance.setPorts({api: 5041, swarm: 4041, gateway: 8040}, true)
+           .then((ports) => {
+                expect(ports).to.exist;
+           })
+    });
+
     it('should add an object to ipfs', function (done) {
         expect(instance.api).to.be.defined;
         instance.api.add({ data: '{}' })
@@ -154,7 +192,7 @@ describe('IpfsConnector', function () {
             });
     });
     it('should add file to ipfs', function (done) {
-       const file = fs.readFileSync(filePath);
+        const file = fs.readFileSync(filePath);
         instance.api
             .addFile(file)
             .then((result)=> {
@@ -245,7 +283,7 @@ describe('IpfsConnector', function () {
             });
     });
 
-    it('should reject when root hash is an not ipfs hash', function (done) {
+    it('should reject when root hash is not an ipfs hash', function (done) {
         instance.api
             .resolve('QmTCMGWApewThNp64JBg9yzhiZGKKDHigS2Y45Tyg1H/data/aa')
             .then(data=> {

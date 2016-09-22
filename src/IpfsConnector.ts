@@ -17,7 +17,7 @@ export class IpfsConnector extends EventEmitter {
     private process: childProcess.ChildProcess;
     private downloadManager = new IpfsBin();
     public options = options;
-    public serviceStatus: { api: boolean, process: boolean } = {process: false, api: false};
+    public serviceStatus: { api: boolean, process: boolean } = { process: false, api: false };
     private _callbacks = new Map();
     private logger: any = console;
     private _api: IpfsApiHelper;
@@ -181,7 +181,20 @@ export class IpfsConnector extends EventEmitter {
                      */
                     return this.emit(events.SERVICE_FAILED);
                 }
-                this._start();
+                childProcess.exec(`${this.downloadManager.wrapper.path()} config Addresses.API`,
+                    { env: options.extra.env },
+                    (error, apiAddress, stderr) => {
+                        if (error) {
+                            this.logger.error(error);
+                        }
+                        if (stderr.includes('ipfs init')) {
+                            this._init();
+                            return Promise.delay(3000).then(() => this.start());
+                        }
+                        options.apiAddress = apiAddress.trim();
+                        return this._start();
+                    });
+
             }
         );
     }
@@ -272,5 +285,51 @@ export class IpfsConnector extends EventEmitter {
         );
         this.options.retry = false;
         this.process = null;
+    }
+
+    public getPorts(): { gateway: number, api: number, swarm: number } {
+        return this.api.apiClient
+            .config.get('Addresses')
+            .then((config: any) => {
+                const { Swarm, API, Gateway } = config;
+                const swarm = Swarm[0].split('/').pop();
+                const api = API.split('/').pop();
+                const gateway = Gateway.split('/').pop();
+                return { gateway, api, swarm };
+            });
+    }
+
+    public setPorts(ports: {gateway?: number, api?: number, swarm?: number}, restart = false) {
+        const setup: any[] = [];
+        if (ports.hasOwnProperty('gateway')) {
+            setup.push(
+                this.api.apiClient
+                    .config.set('Addresses.Gateway', `/ip4/127.0.0.1/tcp/${ports.gateway}`)
+            );
+        }
+
+        if (ports.hasOwnProperty('api')) {
+            setup.push(
+                this.api.apiClient
+                    .config.set('Addresses.API', `/ip4/127.0.0.1/tcp/${ports.api}`)
+            );
+        }
+
+        if (ports.hasOwnProperty('swarm')) {
+            setup.push(
+                this.api.apiClient
+                    .config.set('Addresses.Swarm', [`/ip4/0.0.0.0/tcp/${ports.swarm}`, `/ip6/::/tcp/${ports.swarm}`])
+            );
+        }
+        return Promise.all(setup).then((set: any) => {
+            if (restart) {
+                return Promise.resolve(this.stop()).delay(2000)
+                    .then(() => {
+                        this.start();
+                        return Promise.delay(3000).then(() => set);
+                    });
+            }
+            return set;
+        });
     }
 }

@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.3.0"></a>
+# [1.3.0](https://github.com/AkashaProject/ipfs-connector/compare/v1.2.0...v1.3.0) (2016-09-22)
+
+
+### Features
+
+* **config:** add port configuration for ipfs services ([861d3a2](https://github.com/AkashaProject/ipfs-connector/commit/861d3a2))
+
+
+
 <a name="1.2.0"></a>
 # [1.2.0](https://github.com/AkashaProject/ipfs-connector/compare/v1.1.3...v1.2.0) (2016-09-20)
 

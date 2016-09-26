@@ -41,11 +41,11 @@ export declare class IpfsConnector extends EventEmitter {
     private _pipeStd();
     stop(signal?: string): this;
     private _init();
-    getPorts(): {
+    getPorts(): Promise<{
         gateway: number;
         api: number;
         swarm: number;
-    };
+    }>;
     setPorts(ports: {
         gateway?: number;
         api?: number;

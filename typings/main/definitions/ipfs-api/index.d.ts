@@ -8,5 +8,5 @@ declare class IpfsApi {
 
 declare module 'ipfs-api' {
     const stub: any;
-    export = stub;
+    export default stub;
 }

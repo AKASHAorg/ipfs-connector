@@ -287,7 +287,7 @@ export class IpfsConnector extends EventEmitter {
         this.process = null;
     }
 
-    public getPorts(): { gateway: number, api: number, swarm: number } {
+    public getPorts(): Promise<{ gateway: number, api: number, swarm: number }> {
         return this.api.apiClient
             .config.get('Addresses')
             .then((config: any) => {

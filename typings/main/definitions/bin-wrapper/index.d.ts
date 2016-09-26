@@ -1,12 +1,11 @@
 declare module 'bin-wrapper' {
-    class BinWrapper {
+    export default class BinWrapperIpfs {
         constructor(options?: any);
-        src(path: string, platform: string, arch: string): BinWrapper;
-        dest(path: string): BinWrapper;
-        use(path: string): BinWrapper;
+        src(path: string, platform: string, arch: string): BinWrapperIpfs;
+        dest(path: string): BinWrapperIpfs;
+        use(path: string): BinWrapperIpfs;
         run(command: Array<string>, callback: any): any;
         path: () => string;
-        version(range: string): BinWrapper;
+        version(range: string): BinWrapperIpfs;
     }
-    export default BinWrapper;
 }

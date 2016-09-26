@@ -2,8 +2,8 @@
 
 import * as  Promise from 'bluebird';
 import { unlink } from 'fs';
-import Wrapper = require('bin-wrapper');
-import path = require('path');
+import Wrapper from 'bin-wrapper';
+import * as path from 'path';
 
 const  version  = '0.4.3';
 const base: string = `http://dist.ipfs.io/go-ipfs/v${version}/go-ipfs_v${version}_`;

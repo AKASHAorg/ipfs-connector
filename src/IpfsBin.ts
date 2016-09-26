@@ -10,7 +10,7 @@ const base: string = `http://dist.ipfs.io/go-ipfs/v${version}/go-ipfs_v${version
 const defaultTarget = path.join(__dirname, 'bin');
 
 export class IpfsBin {
-    public wrapper: Wrapper;
+    public wrapper: any;
 
     /**
      * @param target    Folder path for `target` ipfs executable

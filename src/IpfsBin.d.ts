@@ -1,11 +1,10 @@
 /// <reference path="../typings/main.d.ts" />
 /// <reference types="bluebird" />
 import * as Promise from 'bluebird';
-import Wrapper = require('bin-wrapper');
 export declare class IpfsBin {
-    wrapper: Wrapper;
+    wrapper: any;
     constructor(target?: string);
-    getPath(): string;
+    getPath(): any;
     check(): Promise<{}>;
     deleteBin(): Promise<{}>;
 }

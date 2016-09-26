@@ -1,4 +1,4 @@
-/// <reference path="main/definitions/bin-wrapper/index.d.ts" />
-/// <reference path="main/definitions/ipfs-api/index.d.ts" />
-/// <reference path="main/definitions/ipld/index.d.ts" />
-/// <reference path="main/definitions/is-ipfs/index.d.ts" />
+declare module 'bin-wrapper';
+declare module 'ipfs-api';
+declare module 'ipld';
+declare module 'is-ipfs';

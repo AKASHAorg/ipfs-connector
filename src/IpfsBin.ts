@@ -2,7 +2,7 @@
 
 import * as  Promise from 'bluebird';
 import { unlink } from 'fs';
-import Wrapper from 'bin-wrapper';
+import Wrapper = require('bin-wrapper');
 import * as path from 'path';
 
 const  version  = '0.4.3';

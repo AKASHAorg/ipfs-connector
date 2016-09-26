@@ -37,3 +37,4 @@ jspm_packages
 bin
 .idea
 docs
+src/*.js

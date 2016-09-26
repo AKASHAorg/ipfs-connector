@@ -4,15 +4,9 @@
     "module": "commonjs",
     "noImplicitAny": true,
     "removeComments": true,
-    "moduleResolution": "classic",
+    "moduleResolution": "node",
     "noLib": false,
     "preserveConstEnums": true,
     "suppressImplicitAnyIndexErrors": true
-  },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "typings/browser",
-    "typings/browser.d.ts"
-  ]
+  }
 }

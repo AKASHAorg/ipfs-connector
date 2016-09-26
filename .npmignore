@@ -1,5 +1,6 @@
 typings
 *.ts
+!*.d.ts
 .idea
 coverage
 tests
@@ -8,5 +9,5 @@ tslint.json
 typings.json
 bin
 docs
-node_modules
-*.log
+*.map
+*.logs

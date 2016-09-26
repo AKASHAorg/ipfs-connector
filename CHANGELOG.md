@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.4.0"></a>
+# [1.4.0](https://github.com/AkashaProject/ipfs-connector/compare/v1.3.6...v1.4.0) (2016-09-26)
+
+
+### Features
+
+* **ts:** remove typings ([c974060](https://github.com/AkashaProject/ipfs-connector/commit/c974060))
+
+
+
 <a name="1.3.6"></a>
 ## [1.3.6](https://github.com/AkashaProject/ipfs-connector/compare/v1.3.5...v1.3.6) (2016-09-26)
 

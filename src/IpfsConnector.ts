@@ -51,6 +51,9 @@ export class IpfsConnector extends EventEmitter {
                  */
                 return this.emit(events.SERVICE_STARTED);
             }
+            if(data.includes('API server')){
+                this.options.apiAddress = data.toString().trim().split(' ').pop();
+            }
         });
         this._callbacks.set('ipfs.init', (err: Error, stdout: string, stderr: string) => {
             if (err) {
@@ -181,20 +184,7 @@ export class IpfsConnector extends EventEmitter {
                      */
                     return this.emit(events.SERVICE_FAILED);
                 }
-                childProcess.exec(`${this.downloadManager.wrapper.path()} config Addresses.API`,
-                    { env: options.extra.env },
-                    (error, apiAddress, stderr) => {
-                        if (error) {
-                            this.logger.error(error);
-                        }
-                        if (stderr.includes('ipfs init')) {
-                            this._init();
-                            return Promise.delay(3000).then(() => this.start());
-                        }
-                        options.apiAddress = apiAddress.trim();
-                        return this._start();
-                    });
-
+                return this._start();
             }
         );
     }
@@ -309,9 +299,10 @@ export class IpfsConnector extends EventEmitter {
         }
 
         if (ports.hasOwnProperty('api')) {
+            this.options.apiAddress = `/ip4/127.0.0.1/tcp/${ports.api}`;
             setup.push(
                 this.api.apiClient
-                    .config.set('Addresses.API', `/ip4/127.0.0.1/tcp/${ports.api}`)
+                    .config.set('Addresses.API', this.options.apiAddress)
             );
         }
 

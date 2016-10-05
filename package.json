@@ -30,17 +30,17 @@
   },
   "dependencies": {
     "@types/bluebird": "3.0.33",
-    "@types/node": "6.0.41",
+    "@types/node": "6.0.42",
     "bin-wrapper": "3.0.2",
     "bluebird": "3.4.6",
     "ipfs-api": "9.0.0",
-    "is-ipfs": "0.2.0"
+    "is-ipfs": "0.2.1"
   },
   "devDependencies": {
     "chai": "3.5.0",
     "coveralls": "2.11.14",
     "istanbul": "0.4.5",
-    "mocha": "3.0.2",
+    "mocha": "3.1.0",
     "mocha-lcov-reporter": "1.2.0",
     "rimraf": "2.5.4",
     "standard-version": "2.4.0",

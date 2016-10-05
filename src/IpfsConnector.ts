@@ -51,7 +51,7 @@ export class IpfsConnector extends EventEmitter {
                  */
                 return this.emit(events.SERVICE_STARTED);
             }
-            if(data.includes('API server')){
+            if (data.includes('API server')) {
                 this.options.apiAddress = data.toString().trim().split(' ').pop();
             }
         });

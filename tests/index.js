@@ -51,7 +51,7 @@ describe('IpfsConnector', function () {
         expect(api).to.be.an('object');
     });
     it('should emit when downloading binaries', function (done) {
-        this.timeout(120000);
+        this.timeout(61000);
         let triggered = false;
         instance.on(constants.events.DOWNLOAD_STARTED, () => {
             triggered = true;
@@ -67,7 +67,7 @@ describe('IpfsConnector', function () {
     it('should start ipfs daemon', function (done) {
         instance.once(constants.events.SERVICE_STARTED, function () {
             expect(instance.serviceStatus.process).to.be.true;
-            done();
+            setTimeout(done, 1000);
         });
         instance.start();
     });
@@ -79,37 +79,38 @@ describe('IpfsConnector', function () {
         expect(instance.api).to.exist;
         instance.getPorts().then((ports) => {
             expect(ports).to.exist;
-            done();
+            setTimeout(done, 1000)
         });
     });
     it('should set ipfs GATEWAY port', function (done) {
        instance.setPorts({gateway: 8092}).then((ports) => {
            expect(ports).to.exist;
-           done();
+           setTimeout(done, 1000)
        });
     });
 
     it('should set ipfs API port', function (done) {
         instance.setPorts({api: 5041}).then((ports) => {
             expect(ports).to.exist;
-            done();
+            setTimeout(done, 1000)
         });
     });
 
     it('should set ipfs SWARM port', function (done) {
         instance.setPorts({swarm: 4041}).then((ports) => {
             expect(ports).to.exist;
-            done();
+            setTimeout(done, 1000)
         });
     });
 
     it('should restart after setting ports', function (done) {
         instance.once(constants.events.SERVICE_STARTED, function () {
             expect(instance.serviceStatus.process).to.be.true;
-            done();
+            setTimeout(done, 1000);
         });
        instance.setPorts({api: 5041, swarm: 4041, gateway: 8040}, true)
            .then((ports) => {
+                expect(instance.options.apiAddress).to.equal('/ip4/127.0.0.1/tcp/5041');
                 expect(ports).to.exist;
            })
     });
@@ -128,14 +129,14 @@ describe('IpfsConnector', function () {
             }).catch(err => {
             console.log(err);
             expect(err).to.be.undefined;
-            done();
+            setTimeout(done, 1000);
         });
     });
     it('should add buffer to ipfs', function (done) {
         const actual = Buffer.from(JSON.stringify({ a: 1, b: 2 }));
         instance.api.add(actual).then(hash=> {
             expect(hash).to.be.defined;
-            done();
+            setTimeout(done, 1000);
         });
     });
     it('should update from existing object', function (done) {
@@ -149,7 +150,7 @@ describe('IpfsConnector', function () {
                     expect(result.Hash).to.be.defined;
                     instance.api._getStats(result.Hash).then((stats) => {
                         expect(stats.NumLinks).to.be.defined;
-                        done();
+                        setTimeout(done, 1000);
                     });
                 }).catch(err => console.log(err));
             });
@@ -160,13 +161,13 @@ describe('IpfsConnector', function () {
                 bigObjHash = hash;
                 instance.api._getStats(hash).then((stats) => {
                     expect(stats.NumLinks).to.be.above(0);
-                    done();
+                    setTimeout(done, 1000);
                 });
             })
             .catch(err => {
                 console.log(err.message);
                 expect(err).to.be.undefined;
-                done();
+                setTimeout(done, 1000);
             });
     });
     it('should read big file', function (done) {
@@ -174,7 +175,7 @@ describe('IpfsConnector', function () {
             .get(bigObjHash)
             .then(bigBuffer=> {
                 expect(bigBuffer.length).to.equal(Buffer.from(JSON.stringify(bigObject)).length);
-                done();
+                setTimeout(done, 1000);
             })
     });
     it('should construct object link from hash', function (done) {
@@ -184,11 +185,11 @@ describe('IpfsConnector', function () {
             .constructObjLink(bigObjHash)
             .then((result)=> {
                 expect(result).to.deep.equal(expected);
-                done();
+                setTimeout(done, 1000);
             })
             .catch((err)=> {
                 expect(err).to.be.undefined;
-                done();
+                setTimeout(done, 1000);
             });
     });
     it('should add file to ipfs', function (done) {
@@ -201,7 +202,7 @@ describe('IpfsConnector', function () {
             .catch((err)=> {
                 expect(err).not.to.exist;
             })
-            .finally(() => done());
+            .finally(() => setTimeout(done, 1000));
     });
     it('should construct object link from source', function (done) {
         const inputObj = {

@@ -55,6 +55,16 @@ export class IpfsConnector extends EventEmitter {
                 this.options.apiAddress = data.toString().trim().split(' ').pop();
             }
         });
+        this._callbacks.set('ipfs.exit', (code: number, signal: string) => {
+            this.serviceStatus.process = false;
+            this.logger.info(`ipfs exited with code: ${code}, signal: ${signal} `);
+            this.emit(events.SERVICE_STOPPED);
+        });
+
+        this._callbacks.set('ipfs.error', (err: Error) => {
+            this.logger.error(err.message);
+            this.emit(events.ERROR, err.message);
+        });
         this._callbacks.set('ipfs.init', (err: Error, stdout: string, stderr: string) => {
             if (err) {
                 if (stderr.toString().includes('file already exists')) {
@@ -232,12 +242,17 @@ export class IpfsConnector extends EventEmitter {
         const logError = (data: Buffer) => this.logger.error(data.toString());
         const logInfo = (data: Buffer) => this.logger.info(data.toString());
 
+        this.process.once('exit', this._callbacks.get('ipfs.exit'));
+        this.process.on('error', this._callbacks.get('ipfs.error'));
+
         this.process.stderr.on('data', logError);
         this.process.stdout.on('data', logInfo);
         this.once(events.SERVICE_STOPPED, () => {
             if (this.process) {
                 this.process.stderr.removeListener('data', logError);
                 this.process.stdout.removeListener('data', logInfo);
+                this.process.removeListener('exit', this._callbacks.get('ipfs.exit'));
+                this.process.removeListener('error', this._callbacks.get('ipfs.error'))
             }
         });
     }
@@ -253,7 +268,6 @@ export class IpfsConnector extends EventEmitter {
         this.options.retry = true;
         this.serviceStatus.api = false;
         if (this.process) {
-            this.process.once('exit', () => this.emit(events.SERVICE_STOPPED));
             this.process.kill(signal);
             this.process = null;
             this.serviceStatus.process = false;

@@ -78,7 +78,7 @@ describe('IpfsConnector', function () {
     it('should get ipfs config addresses', function (done) {
         expect(instance.api).to.exist;
         instance.getPorts().then((ports) => {
-            expect(ports).to.exist;
+            expect(ports.api).to.exist;
             setTimeout(done, 1000)
         });
     });

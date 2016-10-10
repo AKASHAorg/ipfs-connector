@@ -294,7 +294,7 @@ export class IpfsConnector extends EventEmitter {
 
     public getPorts(): Promise<{ gateway: number, api: number, swarm: number }> {
         return this.api.apiClient
-            .config.get('Addresses')
+            .config.getAsync('Addresses')
             .then((config: any) => {
                 const { Swarm, API, Gateway } = config;
                 const swarm = Swarm[0].split('/').pop();

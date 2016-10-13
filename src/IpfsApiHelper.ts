@@ -9,7 +9,6 @@ export class IpfsApiHelper {
     public apiClient: any;
     public OBJECT_MAX_SIZE = 1.5 * 1024 * 1024; // 1.5mb
     public REQUEST_TIMEOUT = 60 * 1000; // 60s
-    public LINK_SYMBOL = '/';
 
     /**
      * Set ipfs-api object
@@ -19,19 +18,36 @@ export class IpfsApiHelper {
         this.apiClient = provider;
     }
 
+    public static get LINK_SYMBOL() {
+        return '/';
+    }
+
+    public static get ENC_SYMBOL() {
+        return 'enc';
+    }
+
+    public static get ENC_PROTOBUF() {
+        return 'protobuf';
+    }
+
+    public static get ENC_BASE58() {
+        return 'base58';
+    }
+
     /**
      *
      * @param data
+     * @param isProtobuf
      * @returns {any}
      */
-    add(data: Object | Buffer) {
+    add(data: Object | Buffer, isProtobuf = false) {
         let dataBuffer: Buffer;
         if (Buffer.isBuffer(data)) {
             dataBuffer = data;
         } else {
             dataBuffer = toDataBuffer(data);
         }
-        if (dataBuffer.length > this.OBJECT_MAX_SIZE) {
+        if (dataBuffer.length > this.OBJECT_MAX_SIZE || isProtobuf) {
             return this.addFile(dataBuffer);
         }
         return this.apiClient
@@ -58,12 +74,13 @@ export class IpfsApiHelper {
     /**
      *
      * @param objectHash
+     * @param isProtobuf
      * @returns {Bluebird<U>}
      */
-    get(objectHash: string) {
+    get(objectHash: string, isProtobuf = false) {
         return this._getStats(objectHash)
             .then((stats: any) => {
-                if (stats.NumLinks > 0) {
+                if (stats.NumLinks > 0 || isProtobuf) {
                     return this.getFile(objectHash);
                 }
                 return this.getObject(objectHash);
@@ -78,7 +95,7 @@ export class IpfsApiHelper {
     getObject(objectHash: string) {
         return this.apiClient
             .object
-            .getAsync(objectHash, { enc: 'base58' })
+            .getAsync(objectHash, { enc: IpfsApiHelper.ENC_BASE58 })
             .timeout(this.REQUEST_TIMEOUT)
             .then((rawData: any) => {
                 return fromRawData(rawData);
@@ -127,7 +144,7 @@ export class IpfsApiHelper {
     private _getStats(objectHash: string) {
         return this.apiClient
             .object
-            .statAsync(objectHash, { enc: 'base58' })
+            .statAsync(objectHash, { enc: IpfsApiHelper.ENC_BASE58 })
             .timeout(this.REQUEST_TIMEOUT)
             .then((result: Object) => {
                 return result;
@@ -150,7 +167,7 @@ export class IpfsApiHelper {
                 return this.apiClient
                     .object
                     .patch
-                    .setData(hash, dataBuffer, { enc: 'base58' });
+                    .setData(hash, dataBuffer, { enc: IpfsApiHelper.ENC_BASE58 });
             })
             .then((dagNode: any) => {
                 return {
@@ -190,8 +207,10 @@ export class IpfsApiHelper {
                             return reject(new Error('Path could not be resolved'));
                         }
                         // is a link
-                        if (previousObj[chunk].hasOwnProperty(this.LINK_SYMBOL)) {
-                            this.get(previousObj[chunk][this.LINK_SYMBOL])
+                        if (previousObj[chunk].hasOwnProperty(IpfsApiHelper.LINK_SYMBOL)) {
+                            this.get(
+                                previousObj[chunk][IpfsApiHelper.LINK_SYMBOL],
+                                previousObj[chunk].hasOwnProperty(IpfsApiHelper.ENC_PROTOBUF))
                                 .then((discoveredNode: any) => {
                                     currentIndex++;
                                     step(discoveredNode);
@@ -219,16 +238,18 @@ export class IpfsApiHelper {
     /**
      *
      * @param data
+     * @param isProtobuf
      * @returns {any}
      */
-    public constructObjLink(data: any) {
+    public constructObjLink(data: any, isProtobuf = false) {
         const constructed = {};
+        constructed[IpfsApiHelper.ENC_SYMBOL] = (isProtobuf) ? IpfsApiHelper.ENC_PROTOBUF : IpfsApiHelper.ENC_BASE58;
         if (multihash(data)) {
-            constructed[this.LINK_SYMBOL] = data;
+            constructed[IpfsApiHelper.LINK_SYMBOL] = data;
             return Promise.resolve(constructed);
         }
-        return this.add(data).then((hash: string) => {
-            constructed[this.LINK_SYMBOL] = hash;
+        return this.add(data, isProtobuf).then((hash: string) => {
+            constructed[IpfsApiHelper.LINK_SYMBOL] = hash;
             return constructed;
         });
     }

@@ -2,11 +2,11 @@
 
 import * as  Promise from 'bluebird';
 import { unlink } from 'fs';
-import Wrapper = require('bin-wrapper');
 import * as path from 'path';
+import Wrapper = require('bin-wrapper');
 
-const  version  = '0.4.3';
-const base: string = `http://dist.ipfs.io/go-ipfs/v${version}/go-ipfs_v${version}_`;
+const version = '0.4.4';
+const base: string = `https://dist.ipfs.io/go-ipfs/v${version}/go-ipfs_v${version}_`;
 const defaultTarget = path.join(__dirname, 'bin');
 
 export class IpfsBin {
@@ -15,7 +15,7 @@ export class IpfsBin {
     /**
      * @param target    Folder path for `target` ipfs executable
      */
-    constructor (target = defaultTarget) {
+    constructor(target = defaultTarget) {
         this.wrapper = new Wrapper()
             .src(base + 'linux-amd64.tar.gz', 'linux', 'x64')
             .src(base + 'linux-386.tar.gz', 'linux', 'ia32')
@@ -39,7 +39,7 @@ export class IpfsBin {
      * Start download and check the ipfs executable
      * @returns {Bluebird}
      */
-    check (): Promise<{}> {
+    check(): Promise<{}> {
         return new Promise((resolve, reject) => {
             this.wrapper.run(['version'], (err: any) => {
                 if (err) {

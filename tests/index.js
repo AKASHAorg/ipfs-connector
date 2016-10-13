@@ -1,5 +1,5 @@
 "use strict";
-const { IpfsConnector } = require('../index');
+const { IpfsConnector, IpfsApiHelper } = require('../index');
 const path = require('path');
 const fs = require('fs');
 const chai = require('chai');
@@ -13,6 +13,7 @@ describe('IpfsConnector', function () {
     let binTarget = path.join(__dirname, 'bin');
     let filePath = path.join(__dirname, 'stubs', 'example.json');
     let bigObjHash = '';
+    let bigObjHashLink = '';
     let rootHash = '';
     const logger = {
         info: function () {
@@ -51,7 +52,6 @@ describe('IpfsConnector', function () {
         expect(api).to.be.an('object');
     });
     it('should emit when downloading binaries', function (done) {
-        this.timeout(61000);
         let triggered = false;
         instance.on(constants.events.DOWNLOAD_STARTED, () => {
             triggered = true;
@@ -83,21 +83,21 @@ describe('IpfsConnector', function () {
         });
     });
     it('should set ipfs GATEWAY port', function (done) {
-       instance.setPorts({gateway: 8092}).then((ports) => {
-           expect(ports).to.exist;
-           setTimeout(done, 1000)
-       });
+        instance.setPorts({ gateway: 8092 }).then((ports) => {
+            expect(ports).to.exist;
+            setTimeout(done, 1000)
+        });
     });
 
     it('should set ipfs API port', function (done) {
-        instance.setPorts({api: 5041}).then((ports) => {
+        instance.setPorts({ api: 5041 }).then((ports) => {
             expect(ports).to.exist;
             setTimeout(done, 1000)
         });
     });
 
     it('should set ipfs SWARM port', function (done) {
-        instance.setPorts({swarm: 4041}).then((ports) => {
+        instance.setPorts({ swarm: 4041 }).then((ports) => {
             expect(ports).to.exist;
             setTimeout(done, 1000)
         });
@@ -108,11 +108,11 @@ describe('IpfsConnector', function () {
             expect(instance.serviceStatus.process).to.be.true;
             setTimeout(done, 1000);
         });
-       instance.setPorts({api: 5041, swarm: 4041, gateway: 8040}, true)
-           .then((ports) => {
+        instance.setPorts({ api: 5041, swarm: 4041, gateway: 8040 }, true)
+            .then((ports) => {
                 expect(instance.options.apiAddress).to.equal('/ip4/127.0.0.1/tcp/5041');
                 expect(ports).to.exist;
-           })
+            })
     });
 
     it('should add an object to ipfs', function (done) {
@@ -127,7 +127,6 @@ describe('IpfsConnector', function () {
                     throw new Error(err);
                 });
             }).catch(err => {
-            console.log(err);
             expect(err).to.be.undefined;
             setTimeout(done, 1000);
         });
@@ -152,7 +151,10 @@ describe('IpfsConnector', function () {
                         expect(stats.NumLinks).to.be.defined;
                         setTimeout(done, 1000);
                     });
-                }).catch(err => console.log(err));
+                }).catch((err) => {
+                    expect(err).to.not.exist;
+                    done();
+                });
             });
     });
     it('should split when object is too big', function (done) {
@@ -165,7 +167,6 @@ describe('IpfsConnector', function () {
                 });
             })
             .catch(err => {
-                console.log(err.message);
                 expect(err).to.be.undefined;
                 setTimeout(done, 1000);
             });
@@ -178,19 +179,16 @@ describe('IpfsConnector', function () {
                 setTimeout(done, 1000);
             })
     });
-    it('should construct object link from hash', function (done) {
+    it('should construct object link from hash', function () {
         const expected = {};
-        expected[instance.api.LINK_SYMBOL] = bigObjHash;
-        instance.api
-            .constructObjLink(bigObjHash)
+        expected[IpfsApiHelper.LINK_SYMBOL] = bigObjHash;
+        expected[IpfsApiHelper.ENC_SYMBOL] = IpfsApiHelper.ENC_PROTOBUF;
+        return instance.api
+            .constructObjLink(bigObjHash, true)
             .then((result)=> {
+                bigObjHashLink = result;
                 expect(result).to.deep.equal(expected);
-                setTimeout(done, 1000);
             })
-            .catch((err)=> {
-                expect(err).to.be.undefined;
-                setTimeout(done, 1000);
-            });
     });
     it('should add file to ipfs', function (done) {
         const file = fs.readFileSync(filePath);
@@ -209,10 +207,10 @@ describe('IpfsConnector', function () {
             a: 1,
             b: 2
         };
-        const inputLink = { c: '', d: '', e: bigObjHash };
+        const inputLink = { c: '', d: '', e: bigObjHashLink };
         const subLevels = [{ c1: 5, c2: 6 }, {
             d1: 'sdasdsadsad',
-            d2: bigObjHash
+            d2: bigObjHashLink
         }];
         let pool = subLevels.map(
             (plainObj) => {
@@ -222,9 +220,15 @@ describe('IpfsConnector', function () {
         const expectedObj = {
             a: 1,
             b: 2,
-            c: { '/': 'QmTCMGWApewThNp64JBg9yzhiZGKKDHigS2Y45Tyg1HG8r' },
-            d: { '/': 'QmQZe3rajd2VVF4vX8oaZCZBw1YLhH916L1xNjGVd9B8E4' },
-            e: bigObjHash
+            c: {
+                [IpfsApiHelper.LINK_SYMBOL]: 'QmTCMGWApewThNp64JBg9yzhiZGKKDHigS2Y45Tyg1HG8r',
+                [IpfsApiHelper.ENC_SYMBOL]: IpfsApiHelper.ENC_BASE58
+            },
+            d: {
+                [IpfsApiHelper.LINK_SYMBOL]: 'QmWtntCpBsTphKSCpVmUQ2dsQnRbF47VvyTLRAk68dkx8N',
+                [IpfsApiHelper.ENC_SYMBOL]: IpfsApiHelper.ENC_BASE58
+            },
+            e: bigObjHashLink
         };
         const runChecks = (hash) => {
             const steps = [];
@@ -274,6 +278,10 @@ describe('IpfsConnector', function () {
             rootHash = hash;
             return runChecks(hash);
         })
+            .catch((err) => {
+                expect(err).to.not.exist;
+                done();
+            });
     });
     it('should resolve ipfs hash simple path', function (done) {
         instance.api

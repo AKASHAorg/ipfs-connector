@@ -207,10 +207,12 @@ export class IpfsApiHelper {
                             return reject(new Error('Path could not be resolved'));
                         }
                         // is a link
-                        if (previousObj[chunk].hasOwnProperty(IpfsApiHelper.LINK_SYMBOL)) {
+                        if (previousObj[chunk].hasOwnProperty(IpfsApiHelper.LINK_SYMBOL) &&
+                            previousObj[chunk].hasOwnProperty(IpfsApiHelper.ENC_SYMBOL)
+                        ) {
                             this.get(
                                 previousObj[chunk][IpfsApiHelper.LINK_SYMBOL],
-                                previousObj[chunk].hasOwnProperty(IpfsApiHelper.ENC_PROTOBUF))
+                                previousObj[chunk][IpfsApiHelper.ENC_SYMBOL] === IpfsApiHelper.ENC_PROTOBUF)
                                 .then((discoveredNode: any) => {
                                     currentIndex++;
                                     step(discoveredNode);

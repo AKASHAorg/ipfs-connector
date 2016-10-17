@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.6.2"></a>
+## [1.6.2](https://github.com/AkashaProject/ipfs-connector/compare/v1.6.1...v1.6.2) (2016-10-17)
+
+
+### Bug Fixes
+
+* **ipfs:** prevent stringify on stream ([8dfc9b5](https://github.com/AkashaProject/ipfs-connector/commit/8dfc9b5))
+
+
+
 <a name="1.6.1"></a>
 ## [1.6.1](https://github.com/AkashaProject/ipfs-connector/compare/v1.6.0...v1.6.1) (2016-10-13)
 

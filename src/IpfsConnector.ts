@@ -52,7 +52,9 @@ export class IpfsConnector extends EventEmitter {
                 return this.emit(events.SERVICE_STARTED);
             }
             if (data.includes('API server')) {
-                this.options.apiAddress = data.toString().trim().split(' ').pop();
+                setTimeout(() => {
+                    this.options.apiAddress = data.toString().trim().split(' ').pop();
+                }, 1);
             }
         });
         this._callbacks.set('ipfs.exit', (code: number, signal: string) => {

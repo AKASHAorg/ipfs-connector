@@ -38,6 +38,7 @@ describe('IpfsConnector', function () {
     it('should set a different logger', function () {
         instance.setLogger(logger);
         expect(instance.logger).to.deep.equal(logger);
+        instance.setLogger(console);
     });
     it('should emit error when specifying bad ipfs-api address', function (done) {
         const memAddr = instance.options.apiAddress;
@@ -110,6 +111,7 @@ describe('IpfsConnector', function () {
         });
         instance.setPorts({ api: 5041, swarm: 4041, gateway: 8040 }, true)
             .then((ports) => {
+                console.log(instance.options);
                 expect(instance.options.apiAddress).to.equal('/ip4/127.0.0.1/tcp/5041');
                 expect(ports).to.exist;
             })

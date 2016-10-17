@@ -40,9 +40,9 @@ export class IpfsApiHelper {
      * @param isProtobuf
      * @returns {any}
      */
-    add(data: Object | Buffer, isProtobuf = false) {
+    add(data: any, isProtobuf = false) {
         let dataBuffer: Buffer;
-        if (Buffer.isBuffer(data)) {
+        if (Buffer.isBuffer(data) || isProtobuf) {
             dataBuffer = data;
         } else {
             dataBuffer = toDataBuffer(data);

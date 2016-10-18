@@ -246,7 +246,7 @@ export class IpfsApiHelper {
     public constructObjLink(data: any, isProtobuf = false) {
         const constructed = {};
         constructed[IpfsApiHelper.ENC_SYMBOL] = (isProtobuf) ? IpfsApiHelper.ENC_PROTOBUF : IpfsApiHelper.ENC_BASE58;
-        if (multihash(data)) {
+        if (!isProtobuf && multihash(data)) {
             constructed[IpfsApiHelper.LINK_SYMBOL] = data;
             return Promise.resolve(constructed);
         }

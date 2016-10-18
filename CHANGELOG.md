@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.6.3"></a>
+## [1.6.3](https://github.com/AkashaProject/ipfs-connector/compare/v1.6.2...v1.6.3) (2016-10-18)
+
+
+### Bug Fixes
+
+* **objectLink:** prevent checking for multihash on files ([c9be251](https://github.com/AkashaProject/ipfs-connector/commit/c9be251))
+
+
+
 <a name="1.6.2"></a>
 ## [1.6.2](https://github.com/AkashaProject/ipfs-connector/compare/v1.6.1...v1.6.2) (2016-10-17)
 

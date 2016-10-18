@@ -30,6 +30,9 @@ describe('IpfsConnector', function () {
             done();
         });
     });
+    beforeEach(function(done){
+       setTimeout(done, 1000);
+    });
     it('should set .ipfs init folder', function () {
         const target = path.join(binTarget, 'ipfsTest');
         instance.setIpfsFolder(target);
@@ -76,31 +79,27 @@ describe('IpfsConnector', function () {
         instance.setConfig('retry', 1);
         expect(instance.options.retry).to.equal(1);
     });
-    it('should get ipfs config addresses', function (done) {
+    it('should get ipfs config addresses', function () {
         expect(instance.api).to.exist;
-        instance.getPorts().then((ports) => {
+        return instance.getPorts().then((ports) => {
             expect(ports.api).to.exist;
-            setTimeout(done, 1000)
         });
     });
-    it('should set ipfs GATEWAY port', function (done) {
-        instance.setPorts({ gateway: 8092 }).then((ports) => {
+    it('should set ipfs GATEWAY port', function () {
+        return instance.setPorts({ gateway: 8092 }).then((ports) => {
             expect(ports).to.exist;
-            setTimeout(done, 1000)
-        });
-    });
-
-    it('should set ipfs API port', function (done) {
-        instance.setPorts({ api: 5041 }).then((ports) => {
-            expect(ports).to.exist;
-            setTimeout(done, 1000)
         });
     });
 
-    it('should set ipfs SWARM port', function (done) {
-        instance.setPorts({ swarm: 4041 }).then((ports) => {
+    it('should set ipfs API port', function () {
+        return instance.setPorts({ api: 5041 }).then((ports) => {
             expect(ports).to.exist;
-            setTimeout(done, 1000)
+        });
+    });
+
+    it('should set ipfs SWARM port', function () {
+        return instance.setPorts({ swarm: 4041 }).then((ports) => {
+            expect(ports).to.exist;
         });
     });
 

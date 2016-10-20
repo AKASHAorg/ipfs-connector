@@ -47,13 +47,17 @@ export class IpfsConnector extends EventEmitter {
             if (data.includes('Daemon is ready')) {
                 this.serviceStatus.process = true;
                 /**
-                 * @event IpfsConnector#SERVICE_STARTED
+                 * @event IpfsConnector#SERVICE_SPAWNED
                  */
-                return this.emit(events.SERVICE_STARTED);
+                this.emit(events.SERVICE_SPAWNED);
             }
             if (data.includes('API server')) {
                 setTimeout(() => {
                     this.options.apiAddress = data.toString().trim().split(' ').pop();
+                    /**
+                     * @event IpfsConnector#SERVICE_STARTED
+                     */
+                    this.emit(events.SERVICE_STARTED);
                 }, 1);
             }
         });

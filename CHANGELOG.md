@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.6.6"></a>
+## [1.6.6](https://github.com/AkashaProject/ipfs-connector/compare/v1.6.5...v1.6.6) (2016-10-20)
+
+
+### Bug Fixes
+
+* **apiPort:** revert api port detection ([143fb43](https://github.com/AkashaProject/ipfs-connector/commit/143fb43))
+
+
+
 <a name="1.6.5"></a>
 ## [1.6.5](https://github.com/AkashaProject/ipfs-connector/compare/v1.6.4...v1.6.5) (2016-10-20)
 

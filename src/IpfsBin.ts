@@ -37,17 +37,26 @@ export class IpfsBin {
 
     /**
      * Start download and check the ipfs executable
-     * @returns {Bluebird}
+     * @param cb
      */
-    check(): Promise<{}> {
-        return new Promise((resolve, reject) => {
-            this.wrapper.run(['version'], (err: any) => {
-                if (err) {
-                    return reject(err);
-                }
+    check(cb: any) {
+        let downloading = false;
+        const timeOut = setTimeout(() => {
+            downloading = true;
+            cb('', { downloading })
+        }, 600);
+        this.wrapper.run(['version'], (err: any) => {
+            clearTimeout(timeOut);
+            if (err) {
+                return cb(err);
+            }
+            const response = { binPath: this.getPath() };
 
-                return resolve(this.getPath());
-            });
+            if(!downloading){
+                return cb('', response);
+            }
+
+            setTimeout(()=> cb('', response), 300);
         });
     }
 

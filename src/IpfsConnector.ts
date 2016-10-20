@@ -85,7 +85,7 @@ export class IpfsConnector extends EventEmitter {
         });
         this._callbacks.set('events.IPFS_INIT', (err: string) => {
             if (!err) {
-                this._start();
+                this.start();
             }
         });
         this._callbacks.set('events.SERVICE_FAILED', (message: string) => {
@@ -167,20 +167,27 @@ export class IpfsConnector extends EventEmitter {
      * @returns {Bluebird<boolean>}
      */
     public checkExecutable(): Promise<{}> {
-        const timeOut = setTimeout(() => {
-            /**
-             * @event IpfsConnector#DOWNLOAD_STARTED
-             */
-            this.emit(events.DOWNLOAD_STARTED);
-        }, 300);
-        return this.downloadManager.check().then(data => {
-            this.logger.info(`executing from ${data}`);
-            return true;
-        }).catch(err => {
-            this.logger.error(err);
-            this.emit(events.BINARY_CORRUPTED, err);
-            return false;
-        }).finally(() => clearTimeout(timeOut));
+        return new Promise((resolve, reject) => {
+            this.downloadManager.check(
+                (err: Error, data:{binPath?: string, downloading?: boolean}) => {
+                if(err){
+                    this.logger.error(err);
+                    this.emit(events.BINARY_CORRUPTED, err);
+                    return reject(err);
+                }
+
+                if(data.binPath){
+                    return resolve(data.binPath);
+                }
+
+                if(data.downloading){
+                    /**
+                     * @event IpfsConnector#DOWNLOAD_STARTED
+                     */
+                    this.emit(events.DOWNLOAD_STARTED);
+                }
+            })
+        });
     }
 
     /**
@@ -190,21 +197,15 @@ export class IpfsConnector extends EventEmitter {
     public start() {
 
         return this.checkExecutable().then(
-            (binOk) => {
-                if (!binOk) {
-                    /**
-                     * @event IpfsConnector#SERVICE_FAILED
-                     */
-                    return this.emit(events.SERVICE_FAILED);
-                }
-                return this._start();
+            (binPath: string) => {
+                return this._start(binPath);
             }
         );
     }
 
-    private _start() {
+    private _start(binPath: string) {
         this.process = childProcess.spawn(
-            this.downloadManager.wrapper.path(),
+            binPath,
             this.options.args,
             this.options.extra
         );

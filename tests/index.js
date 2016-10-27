@@ -30,8 +30,8 @@ describe('IpfsConnector', function () {
             done();
         });
     });
-    beforeEach(function(done){
-       setTimeout(done, 1000);
+    beforeEach(function (done) {
+        setTimeout(done, 1000);
     });
     it('should set .ipfs init folder', function () {
         const target = path.join(binTarget, 'ipfsTest');
@@ -289,6 +289,16 @@ describe('IpfsConnector', function () {
                 expect(data).to.deep.equal({ c1: 5, c2: 6 });
                 done();
             });
+    });
+    it('should resolve ipfs object path', function (done) {
+        instance.api
+            .resolve({
+                [IpfsApiHelper.LINK_SYMBOL]: 'QmTCMGWApewThNp64JBg9yzhiZGKKDHigS2Y45Tyg1HG8r',
+                [IpfsApiHelper.ENC_SYMBOL]: IpfsApiHelper.ENC_BASE58
+            }).then((data) => {
+            expect(data).to.deep.equal({ c1: 5, c2: 6 });
+            done();
+        })
     });
 
     it('should reject when root hash is not an ipfs hash', function (done) {

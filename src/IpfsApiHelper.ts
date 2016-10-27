@@ -182,7 +182,15 @@ export class IpfsApiHelper {
      * @param path
      * @returns {any}
      */
-    resolve(path: string) {
+    resolve(path: any) {
+        if (typeof path === "object") {
+            if (path.hasOwnProperty(IpfsApiHelper.LINK_SYMBOL) && path.hasOwnProperty(IpfsApiHelper.ENC_SYMBOL)) {
+                return this.get(
+                    path[IpfsApiHelper.LINK_SYMBOL],
+                    path[IpfsApiHelper.ENC_SYMBOL] === IpfsApiHelper.ENC_PROTOBUF
+                );
+            }
+        }
         if (multihash(path)) {
             return this.get(path);
         }

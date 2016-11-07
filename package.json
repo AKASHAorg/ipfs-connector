@@ -8,7 +8,8 @@
     "test": "./node_modules/istanbul/lib/cli.js cover ./node_modules/.bin/_mocha  ./tests/index.js",
     "docs": "typedoc index.ts --out docs",
     "release": "standard-version",
-    "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls"
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls",
+    "test-debug": "./node_modules/.bin/_mocha ./tests/index.js -- --inspect --debug-brk"
   },
   "keywords": [
     "ipfs",
@@ -33,7 +34,7 @@
     "@types/node": "6.0.46",
     "bin-wrapper": "3.0.2",
     "bluebird": "3.4.6",
-    "ipfs-api": "9.0.0",
+    "ipfs-api": "11.0.1",
     "is-ipfs": "0.2.1"
   },
   "devDependencies": {
@@ -45,8 +46,8 @@
     "rimraf": "2.5.4",
     "standard-version": "3.0.0",
     "tslint": "3.15.1",
-    "typescript": "2.0.6",
-    "typings": "1.4.0"
+    "typescript": "2.0.7",
+    "typings": "1.5.0"
   },
   "homepage": "https://github.com/AkashaProject/ipfs-connector#readme",
   "directories": {

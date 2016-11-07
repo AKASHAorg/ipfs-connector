@@ -143,6 +143,7 @@ describe('IpfsConnector', function () {
             .then((hash) => {
                 const patchAttr = { b: 3 };
                 instance.api.updateObject(hash, patchAttr).then((result) => {
+                    result.Data = JSON.parse(result.Data);
                     expect(result.Data.a).to.equal(initialObj.a);
                     expect(result.Data.b).to.equal(patchAttr.b);
                     expect(result.Hash).to.be.defined;
@@ -151,6 +152,7 @@ describe('IpfsConnector', function () {
                         setTimeout(done, 1000);
                     });
                 }).catch((err) => {
+                    console.log(err);
                     expect(err).to.not.exist;
                     done();
                 });

@@ -54,7 +54,7 @@ export class IpfsApiHelper {
             .object
             .putAsync(dataBuffer)
             .then((dagNode: any) => {
-                return fromRawObject(dagNode).Hash;
+                return fromRawObject(dagNode).then((jsonData) => jsonData.Hash);
             });
     }
 
@@ -98,7 +98,7 @@ export class IpfsApiHelper {
             .getAsync(objectHash, { enc: IpfsApiHelper.ENC_BASE58 })
             .timeout(this.REQUEST_TIMEOUT)
             .then((rawData: any) => {
-                return fromRawData(rawData);
+                return fromRawData(rawData).then((jsonData) => jsonData);
             });
     }
 
@@ -170,10 +170,7 @@ export class IpfsApiHelper {
                     .setData(hash, dataBuffer, { enc: IpfsApiHelper.ENC_BASE58 });
             })
             .then((dagNode: any) => {
-                return {
-                    Data: fromRawData(dagNode),
-                    Hash: dagNode.toJSON().Hash
-                };
+                return fromRawObject(dagNode).then((jsonData) => jsonData);
             });
     }
 

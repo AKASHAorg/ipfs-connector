@@ -1,3 +1,4 @@
+import * as Promise from 'bluebird';
 /**
  *
  * @param data
@@ -13,13 +14,15 @@ export function toDataBuffer(data: Object) {
  * @returns {any}
  */
 export function fromRawData(rawData: any) {
-    let data: any;
-    try {
-        data = JSON.parse(rawData.toJSON().Data);
-    } catch (err) {
-        data = rawData.toJSON().Data;
-    }
-    return data;
+    return fromRawObject(rawData).then((data) => {
+        let returned: any;
+        try {
+            returned = JSON.parse(data.Data);
+        } catch (err) {
+            returned = data.Data;
+        }
+        return returned;
+    });
 }
 
 /**
@@ -28,7 +31,9 @@ export function fromRawData(rawData: any) {
  * @returns {string|any|Object}
  */
 export function fromRawObject(rawObject: any) {
-    return rawObject.toJSON();
+    return Promise.fromCallback((cb) => {
+        rawObject.toJSON(cb);
+    });
 }
 
 /**

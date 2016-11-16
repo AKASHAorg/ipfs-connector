@@ -5,6 +5,6 @@ export declare class IpfsBin {
     wrapper: any;
     constructor(target?: string);
     getPath(): any;
-    check(): Promise<{}>;
+    check(cb: any): void;
     deleteBin(): Promise<{}>;
 }

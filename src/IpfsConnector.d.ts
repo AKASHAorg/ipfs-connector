@@ -26,7 +26,7 @@ export declare class IpfsConnector extends EventEmitter {
     private _callbacks;
     private logger;
     private _api;
-    constructor(enforcer: Symbol);
+    constructor(enforcer: any);
     static getInstance(): IpfsConnector;
     readonly api: IpfsApiHelper;
     setLogger(logger: {}): void;
@@ -34,8 +34,8 @@ export declare class IpfsConnector extends EventEmitter {
     setConfig(option: string, value: string): void;
     setIpfsFolder(target: string): void;
     checkExecutable(): Promise<{}>;
-    start(): Promise<boolean | void>;
-    private _start();
+    start(): Promise<void>;
+    private _start(binPath);
     private _attachStartingEvents();
     private _flushStartingEvents();
     private _pipeStd();

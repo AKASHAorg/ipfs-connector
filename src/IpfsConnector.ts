@@ -25,7 +25,7 @@ export class IpfsConnector extends EventEmitter {
     /**
      * @param enforcer
      */
-    constructor(enforcer: Symbol) {
+    constructor(enforcer: any) {
         super();
         if (enforcer !== symbolEnforcer) {
             throw new Error('Use .getInstance() instead of constructing a new object');

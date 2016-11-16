@@ -42,7 +42,7 @@ describe('IpfsConnector', function () {
         instance.setLogger(logger);
         expect(instance.logger).to.deep.equal(logger);
     });
-    it('should emit error when specifying bad ipfs-api address', function (done) {
+    it.skip('should emit error when specifying bad ipfs-api address', function (done) {
         const memAddr = instance.options.apiAddress;
         instance.options.apiAddress = 'Qmxf09FAke';
         instance.once(constants.events.ERROR, (message) => {

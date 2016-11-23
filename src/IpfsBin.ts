@@ -22,7 +22,7 @@ export class IpfsBin {
             .src(base + 'linux-arm.tar.gz', 'linux', 'arm')
             .src(base + 'windows-386.zip', 'win32', 'ia32')
             .src(base + 'windows-amd64.zip', 'win32', 'x64')
-            .src(base + 'darwin-amd64.zip', 'darwin', 'x64')
+            .src(base + 'darwin-amd64.tar.gz', 'darwin', 'x64')
             .dest(target)
             .use(process.platform === 'win32' ? 'ipfs.exe' : 'ipfs');
     }

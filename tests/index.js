@@ -74,10 +74,6 @@ describe('IpfsConnector', function () {
         });
         instance.start();
     });
-    it('should set config key for spawned process', function () {
-        instance.setConfig('retry', 1);
-        expect(instance.options.retry).to.equal(1);
-    });
     it('should get ipfs config addresses', function () {
         expect(instance.api).to.exist;
         return instance.getPorts().then((ports) => {

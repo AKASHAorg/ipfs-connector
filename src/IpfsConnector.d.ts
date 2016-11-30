@@ -2,11 +2,12 @@
 /// <reference types="node" />
 /// <reference types="bluebird" />
 import * as Promise from 'bluebird';
+import { IpfsBin } from './IpfsBin';
 import { IpfsApiHelper } from './IpfsApiHelper';
 import { EventEmitter } from 'events';
 export declare class IpfsConnector extends EventEmitter {
     private process;
-    private downloadManager;
+    downloadManager: IpfsBin;
     options: {
         retry: boolean;
         apiAddress: string;

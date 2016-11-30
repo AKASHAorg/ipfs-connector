@@ -15,7 +15,7 @@ const symbol = Symbol();
 
 export class IpfsConnector extends EventEmitter {
     private process: childProcess.ChildProcess;
-    private downloadManager = new IpfsBin();
+    public downloadManager = new IpfsBin();
     public options = options;
     public serviceStatus: { api: boolean, process: boolean } = { process: false, api: false };
     private _callbacks = new Map();
@@ -43,7 +43,7 @@ export class IpfsConnector extends EventEmitter {
              */
             return this.emit(events.SERVICE_FAILED, data);
         });
-        this._callbacks.set('process.stdout.on', (data: string) => {
+        this._callbacks.set('process.stdout.on', (data: Buffer) => {
 
             if (data.includes('API server')) {
                 this.options.apiAddress = (data.toString().match(/API server listening on (.*)\n/))[1];
@@ -88,7 +88,7 @@ export class IpfsConnector extends EventEmitter {
                 this.start();
             }
         });
-        this._callbacks.set('events.SERVICE_FAILED', (message: string) => {
+        this._callbacks.set('events.SERVICE_FAILED', (message: Buffer) => {
             if (message.includes('ipfs init')) {
                 setTimeout(() => this._init(), 500);
             }

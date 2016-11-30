@@ -1,4 +1,3 @@
-import * as Promise from 'bluebird';
 /**
  *
  * @param data
@@ -14,15 +13,14 @@ export function toDataBuffer(data: Object) {
  * @returns {any}
  */
 export function fromRawData(rawData: any) {
-    return fromRawObject(rawData).then((data) => {
-        let returned: any;
-        try {
-            returned = JSON.parse(data.Data);
-        } catch (err) {
-            returned = data.Data;
-        }
-        return returned;
-    });
+    const jsonData = fromRawObject(rawData);
+    let returned: any;
+    try {
+        returned = JSON.parse(jsonData.data);
+    } catch (err) {
+        returned = jsonData.data;
+    }
+    return returned;
 }
 
 /**
@@ -31,9 +29,7 @@ export function fromRawData(rawData: any) {
  * @returns {string|any|Object}
  */
 export function fromRawObject(rawObject: any) {
-    return Promise.fromCallback((cb) => {
-        rawObject.toJSON(cb);
-    });
+    return rawObject.toJSON();
 }
 
 /**
@@ -41,7 +37,7 @@ export function fromRawObject(rawObject: any) {
  * @param path
  * @returns {string[]}
  */
-export function splitPath (path: string) {
+export function splitPath(path: string) {
     return path.replace(/^\//, '')
         .replace(/([^\\])\//g, '$1\u000B').split('\u000B');
 }

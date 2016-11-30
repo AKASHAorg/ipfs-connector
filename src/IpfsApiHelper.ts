@@ -3,11 +3,10 @@ import * as Promise from 'bluebird';
 import { fromRawData, toDataBuffer, fromRawObject, splitPath } from './statics';
 import { multihash } from 'is-ipfs';
 import { Readable } from 'stream';
-import set = Reflect.set;
 
 export class IpfsApiHelper {
     public apiClient: any;
-    public OBJECT_MAX_SIZE = 1.5 * 1024 * 1024; // 1.5mb
+    public OBJECT_MAX_SIZE = 256 * 1024; // 256kb
     public REQUEST_TIMEOUT = 60 * 1000; // 60s
 
     /**
@@ -40,7 +39,7 @@ export class IpfsApiHelper {
      * @param isProtobuf
      * @returns {any}
      */
-    add(data: any, isProtobuf = false) {
+    public add(data: any, isProtobuf = false) {
         let dataBuffer: Buffer;
         if (Buffer.isBuffer(data) || isProtobuf) {
             dataBuffer = data;
@@ -54,7 +53,7 @@ export class IpfsApiHelper {
             .object
             .putAsync(dataBuffer)
             .then((dagNode: any) => {
-                return fromRawObject(dagNode).then((jsonData) => jsonData.Hash);
+                return fromRawObject(dagNode).multihash;
             });
     }
 
@@ -63,11 +62,11 @@ export class IpfsApiHelper {
      * @param dataBuffer
      * @returns {Bluebird}
      */
-    addFile(dataBuffer: Buffer) {
+    public addFile(dataBuffer: Buffer) {
         return this.apiClient
             .addAsync(dataBuffer)
             .then((file: any[]) => {
-                return file[0].path;
+                return file[0].hash;
             });
     }
 
@@ -77,7 +76,7 @@ export class IpfsApiHelper {
      * @param isProtobuf
      * @returns {Bluebird<U>}
      */
-    get(objectHash: string, isProtobuf = false) {
+    public get(objectHash: string, isProtobuf = false) {
         return this._getStats(objectHash)
             .then((stats: any) => {
                 if (stats.NumLinks > 0 || isProtobuf) {
@@ -92,13 +91,13 @@ export class IpfsApiHelper {
      * @param objectHash
      * @returns {Bluebird<U>|Thenable<U>|PromiseLike<TResult>|Promise<TResult>}
      */
-    getObject(objectHash: string) {
+    public getObject(objectHash: string) {
         return this.apiClient
             .object
             .getAsync(objectHash, { enc: IpfsApiHelper.ENC_BASE58 })
             .timeout(this.REQUEST_TIMEOUT)
             .then((rawData: any) => {
-                return fromRawData(rawData).then((jsonData) => jsonData);
+                return fromRawData(rawData);
             });
     }
 
@@ -107,7 +106,7 @@ export class IpfsApiHelper {
      * @param hash
      * @returns {"~bluebird/bluebird".Bluebird}
      */
-    getFile(hash: string) {
+    public getFile(hash: string) {
         return new Promise((resolve, reject) => {
             const chunks: Buffer[] = [];
             let fileLength = 0;
@@ -157,7 +156,7 @@ export class IpfsApiHelper {
      * @param newData
      * @returns {Thenable<{Data: any, Hash: any}>|PromiseLike<{Data: any, Hash: any}>|Bluebird<{Data: any, Hash: any}>}
      */
-    updateObject(hash: string, newData: Object) {
+    public updateObject(hash: string, newData: Object) {
 
         return this.get(hash)
             .then((dataResponse: Object) => {
@@ -167,10 +166,10 @@ export class IpfsApiHelper {
                 return this.apiClient
                     .object
                     .patch
-                    .setData(hash, dataBuffer, { enc: IpfsApiHelper.ENC_BASE58 });
+                    .setData(hash, dataBuffer);
             })
             .then((dagNode: any) => {
-                return fromRawObject(dagNode).then((jsonData) => jsonData);
+                return fromRawObject(dagNode);
             });
     }
 
@@ -179,7 +178,7 @@ export class IpfsApiHelper {
      * @param path
      * @returns {any}
      */
-    resolve(path: any) {
+    public resolve(path: any) {
         if (typeof path === "object") {
             if (path.hasOwnProperty(IpfsApiHelper.LINK_SYMBOL) && path.hasOwnProperty(IpfsApiHelper.ENC_SYMBOL)) {
                 return this.get(

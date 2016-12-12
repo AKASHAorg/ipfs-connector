@@ -7,11 +7,11 @@ const rimraf = require('rimraf');
 const constants = require('../src/constants');
 const bigObject = require('./stubs/bigObject.json');
 const expect = chai.expect;
-
 describe('IpfsConnector', function () {
     let instance = IpfsConnector.getInstance();
     let binTarget = path.join(__dirname, 'bin');
     let filePath = path.join(__dirname, 'stubs', 'example.json');
+    const file = fs.readFileSync(filePath);
     let bigObjHash = '';
     let bigObjHashLink = '';
     let rootHash = '';
@@ -59,7 +59,7 @@ describe('IpfsConnector', function () {
         instance.on(constants.events.DOWNLOAD_STARTED, () => {
             triggered = true;
         });
-        instance.checkExecutable().then(()=> {
+        instance.checkExecutable().then(() => {
             expect(triggered).to.be.true;
             done();
         }).catch((err) => {
@@ -98,7 +98,7 @@ describe('IpfsConnector', function () {
         });
     });
 
-    it('should restart after setting ports', function (done) {
+    it('restarts after setting ports', function (done) {
         instance.once(constants.events.SERVICE_STARTED, function () {
             expect(instance.serviceStatus.process).to.be.true;
             setTimeout(done, 1000);
@@ -110,223 +110,134 @@ describe('IpfsConnector', function () {
             })
     });
 
-    it('should add an object to ipfs', function (done) {
+    it('adds an object to ipfs', function () {
         expect(instance.api).to.be.defined;
-        instance.api.add({ data: '{}' })
-            .then((hash) => {
-                expect(hash).to.be.defined;
-                instance.api.get(hash).then((data1) => {
+        return instance.api.add({ data: '{}' })
+            .then((node) => {
+                expect(node.hash).to.be.defined;
+                instance.api.get(node.hash).then((data1) => {
                     expect(data1).to.have.property('data');
-                    done();
-                }).catch(err => {
-                    throw new Error(err);
-                });
-            }).catch(err => {
-            expect(err).to.be.undefined;
-            setTimeout(done, 1000);
-        });
+                    expect(data1.data).to.equal('{}');
+                })
+            });
     });
-    it('should add buffer to ipfs', function (done) {
+
+    it('adds buffer to ipfs', function () {
         const actual = Buffer.from(JSON.stringify({ a: 1, b: 2 }));
-        instance.api.add(actual).then(hash=> {
-            expect(hash).to.be.defined;
-            setTimeout(done, 1000);
+        return instance.api.add(actual).then(node => {
+            expect(node).to.have.property('hash');
         });
     });
-    it('should update from existing object', function (done) {
+
+    it('updates from existing object', function () {
         const initialObj = { a: 1, b: 2 };
-        instance.api.add(initialObj)
-            .then((hash) => {
+        return instance.api.add(initialObj)
+            .then((node) => {
                 const patchAttr = { b: 3 };
-                instance.api.updateObject(hash, patchAttr).then((result) => {
+                instance.api.updateObject(node.hash, patchAttr).then((result) => {
                     result.data = JSON.parse(result.data);
                     expect(result.data.a).to.equal(initialObj.a);
                     expect(result.data.b).to.equal(patchAttr.b);
                     expect(result.multihash).to.be.defined;
-                    instance.api._getStats(result.multihash).then((stats) => {
-                        expect(stats.NumLinks).to.be.defined;
-                        setTimeout(done, 1000);
-                    });
-                }).catch((err) => {
-                    expect(err).to.not.exist;
-                    done();
-                });
-            });
-    });
-    it('should split when object is too big', function (done) {
-        instance.api.add(bigObject)
-            .then(hash => {
-                bigObjHash = hash;
-                instance.api._getStats(hash).then((stats) => {
-                    expect(stats.NumLinks).to.be.above(0);
-                    setTimeout(done, 1000);
-                });
-            })
-            .catch(err => {
-                expect(err).to.be.undefined;
-                setTimeout(done, 1000);
-            });
-    });
-    it('should read big file', function (done) {
-        instance.api
-            .get(bigObjHash)
-            .then(bigBuffer=> {
-                expect(bigBuffer.length).to.equal(Buffer.from(JSON.stringify(bigObject)).length);
-                setTimeout(done, 1000);
-            })
-    });
-    it('should construct object link from hash', function () {
-        const expected = {};
-        expected[IpfsApiHelper.LINK_SYMBOL] = bigObjHash;
-        expected[IpfsApiHelper.ENC_SYMBOL] = IpfsApiHelper.ENC_PROTOBUF;
-        return instance.api
-            .constructObjLink(bigObjHash, true)
-            .then((result)=> {
-                bigObjHashLink = result;
-                expect(result).to.deep.equal(expected);
-            })
-    });
-    it('should add file to ipfs', function (done) {
-        const file = fs.readFileSync(filePath);
-        instance.api
-            .addFile(file)
-            .then((result)=> {
-                expect(result).to.exist;
-            })
-            .catch((err)=> {
-                expect(err).not.to.exist;
-            })
-            .finally(() => setTimeout(done, 1000));
-    });
-    it('should construct object link from source', function (done) {
-        const inputObj = {
-            a: 1,
-            b: 2
-        };
-        const inputLink = { c: '', d: '', e: bigObjHashLink };
-        const subLevels = [{ c1: 5, c2: 6 }, {
-            d1: 'sdasdsadsad',
-            d2: bigObjHashLink
-        }];
-        let pool = subLevels.map(
-            (plainObj) => {
-                return instance.api.constructObjLink(plainObj);
-            }
-        );
-        const expectedObj = {
-            a: 1,
-            b: 2,
-            c: {
-                [IpfsApiHelper.LINK_SYMBOL]: 'QmTCMGWApewThNp64JBg9yzhiZGKKDHigS2Y45Tyg1HG8r',
-                [IpfsApiHelper.ENC_SYMBOL]: IpfsApiHelper.ENC_BASE58
-            },
-            d: {
-                [IpfsApiHelper.LINK_SYMBOL]: 'QmWtntCpBsTphKSCpVmUQ2dsQnRbF47VvyTLRAk68dkx8N',
-                [IpfsApiHelper.ENC_SYMBOL]: IpfsApiHelper.ENC_BASE58
-            },
-            e: bigObjHashLink
-        };
-        const runChecks = (hash) => {
-            const steps = [];
-            const checks = [];
-            steps.push(instance.api.resolve(`${hash}/a`));
-            checks.push(expectedObj.a);
-
-            steps.push(instance.api.resolve(`${hash}/e`));
-            checks.push(bigObject);
-
-            steps.push(instance.api.resolve(`${hash}/c/c1`));
-            checks.push(subLevels[0].c1);
-
-            steps.push(instance.api.resolve(`${hash}/d/d2`));
-            checks.push(bigObject);
-
-            steps.push(instance.api.resolve(`${hash}/d/d1`));
-            checks.push(subLevels[1].d1);
-
-            steps.push(instance.api.resolve(`${hash}/c`));
-            checks.push(subLevels[0]);
-
-            return Promise.all(steps)
-                .then(results => {
-                    results.forEach((result, key)=> {
-                        if (Buffer.isBuffer(result)) {
-                            expect(result.length)
-                                .to
-                                .equal(Buffer.from(JSON.stringify(checks[key])).length)
-                        } else {
-                            expect(result).to.deep.equal(checks[key]);
-                        }
-                        if (key === (results.length - 1)) {
-                            done();
-                        }
+                    instance.api.getStats(result.multihash).then((stats) => {
+                        expect(stats.NumLinks).to.equal(0);
                     });
                 })
-        };
-        Promise.all(pool).then(
-            (links) => {
-                [inputLink.c, inputLink.d] = links;
-                const constructedObj = Object.assign({}, inputObj, inputLink);
-                expect(constructedObj).to.deep.equal(expectedObj);
-                return instance.api.add(constructedObj);
-            }
-        ).then((hash) => {
-            rootHash = hash;
-            return runChecks(hash);
-        })
-            .catch((err) => {
-                expect(err).to.not.exist;
-                done();
             });
-    });
-    it('should resolve ipfs hash simple path', function (done) {
-        instance.api
-            .resolve('QmTCMGWApewThNp64JBg9yzhiZGKKDHigS2Y45Tyg1HG8r')
-            .then(data=> {
-                expect(data).to.deep.equal({ c1: 5, c2: 6 });
-                done();
-            });
-    });
-    it('should resolve ipfs object path', function (done) {
-        instance.api
-            .resolve({
-                [IpfsApiHelper.LINK_SYMBOL]: 'QmTCMGWApewThNp64JBg9yzhiZGKKDHigS2Y45Tyg1HG8r',
-                [IpfsApiHelper.ENC_SYMBOL]: IpfsApiHelper.ENC_BASE58
-            }).then((data) => {
-            expect(data).to.deep.equal({ c1: 5, c2: 6 });
-            done();
-        })
     });
 
-    it('should reject when root hash is not an ipfs hash', function (done) {
-        instance.api
-            .resolve('QmTCMGWApewThNp64JBg9yzhiZGKKDHigS2Y45Tyg1H/data/aa')
-            .then(data=> {
-                expect(data).to.be.undefined;
-                done();
+    it('splits when object is too big', function () {
+        return instance.api.add(bigObject)
+            .then(node => {
+                bigObjHash = node.hash;
+                instance.api.getStats(node.hash).then((stats) => {
+                    expect(stats.NumLinks).to.be.above(0);
+                });
             })
-            .catch(err=> {
-                expect(err).to.be.defined;
-                done();
-            });
     });
 
-    it('should reject when path cant be resolved', function (done) {
-        instance.api
-            .resolve('QmTCMGWApewThNp64JBg9yzhiZGKKDHigS2Y45Tyg1HG8r/c3')
-            .then(data=> {
-                expect(data).to.be.undefined;
-                done();
+    it('reads big file', function () {
+        return instance.api
+            .get(bigObjHash, true)
+            .then(bigBuffer => {
+                expect(bigBuffer.length).to.equal(Buffer.from(JSON.stringify(bigObject)).length);
             })
-            .catch(err=> {
-                expect(err).to.be.defined;
-                done();
+    });
+
+    it('constructs object link from hash', function () {
+        return instance.api
+            .addLinkFrom({ coco: 1 }, 'testLink', 'QmUdVKL1h4As9qKrq4aixAFGUZvsFu17twga4PBd6GzpCG')
+            .then((result) => {
+                expect(result.links.length).to.be.above(0);
+                return instance.api.getStats(result.multihash).then((stats) => {
+                    expect(stats.NumLinks).to.be.above(0);
+                });
+            })
+    });
+
+
+    it('adds file to ipfs', function () {
+        return instance.api
+            .addFile(file)
+            .then((result) => {
+                expect(result).to.exist;
             });
     });
 
-    it('should remove ipfs binary file', function (done) {
-        instance.downloadManager.deleteBin().then(()=> done());
+    it('creates link to a file', function () {
+        return instance.api
+            .addLinkFrom(bigObject, 'testFile', 'QmUdVKL1h4As9qKrq4aixAFGUZvsFu17twga4PBd6GzpCG')
+            .then((result) => {
+                expect(result.links.length).to.be.above(0);
+            })
     });
+
+    it('gets stats for hash', function () {
+        return instance.api
+            .getStats('QmRB9Mcov6eFhc1oPsbbfyYjEZKRu2ig1zhzfG3BXikcEo')
+            .then((stats) => {
+                expect(stats).to.exist;
+            });
+    });
+
+    it('creates node with links', function () {
+        const links = [{ name: 'testFile', size: 12, multihash: 'QmPMH5GFmLP2oU8dK7i4iWJyX6FpgeK3gT6ZC6xLLZQ9cW' },
+            { name: 'testLink', size: 12, multihash: 'Qmd7rTCyKW8YTtPbxDnturBPd8KPaA3SK7B2uvcScTWVNj' }];
+        return instance.api
+            .createNode({ test: 2 }, links)
+            .then((result) => {
+                expect(result).to.exist;
+            })
+    });
+
+    it('gets node data', function () {
+        return instance.api
+            .get('QmTymNDirRZeSjFXUUZkYHUL2TfyfMyJvG71AEPwx7yMUk')
+            .then((result) => {
+                expect(result).to.have.property('test');
+            })
+    });
+
+
+    it('gets object links', function () {
+        return instance.api.getLinks('QmTymNDirRZeSjFXUUZkYHUL2TfyfMyJvG71AEPwx7yMUk')
+            .then((result) => {
+                expect(result).to.exist;
+            });
+
+    });
+
+    it('gets a link by name', function () {
+        return instance.api.findLinks('QmTymNDirRZeSjFXUUZkYHUL2TfyfMyJvG71AEPwx7yMUk', ['testFile'])
+            .then((dagLinks) => {
+                expect(dagLinks).to.exist;
+            });
+    });
+
+    it('removes ipfs binary file', function (done) {
+        instance.downloadManager.deleteBin().then(() => done());
+    });
+
     after(function (done) {
         instance.stop();
         rimraf(binTarget, function () {

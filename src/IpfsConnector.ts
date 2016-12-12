@@ -121,6 +121,7 @@ export class IpfsConnector extends EventEmitter {
                     this.emit(events.ERROR, err.message);
                 });
             api.object = Promise.promisifyAll(api.object);
+            api.object.patch = Promise.promisifyAll(api.object.patch);
             api.config = Promise.promisifyAll(api.config);
             api = Promise.promisifyAll(api);
             this._api = new IpfsApiHelper(api);

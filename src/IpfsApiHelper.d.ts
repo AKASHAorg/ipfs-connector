@@ -7,17 +7,17 @@ export declare class IpfsApiHelper {
     OBJECT_MAX_SIZE: number;
     REQUEST_TIMEOUT: number;
     constructor(provider: any);
-    static readonly LINK_SYMBOL: string;
-    static readonly ENC_SYMBOL: string;
-    static readonly ENC_PROTOBUF: string;
     static readonly ENC_BASE58: string;
-    add(data: any, isProtobuf?: boolean): any;
+    add(data: any, isFile?: boolean): any;
+    addObject(data: any): any;
+    createNode(root: any, links: any[]): any;
     addFile(dataBuffer: Buffer): any;
-    get(objectHash: string, isProtobuf?: boolean): any;
-    getObject(objectHash: string): any;
+    findLinks(hash: string, names: string[]): any;
+    getLinks(hash: string): any;
+    get(objectHash: string, isFile?: boolean): any;
+    getObject(objectHash: string, full?: boolean): any;
     getFile(hash: string): Promise<{}>;
-    private _getStats(objectHash);
+    getStats(objectHash: string): any;
     updateObject(hash: string, newData: Object): any;
-    resolve(path: any): any;
-    constructObjLink(data: any, isProtobuf?: boolean): any;
+    addLinkFrom(data: any, name: string, linkTo: string): any;
 }

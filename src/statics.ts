@@ -4,6 +4,9 @@
  * @returns {Buffer}
  */
 export function toDataBuffer(data: Object) {
+    if(Buffer.isBuffer(data)){
+        return data;
+    }
     return Buffer.from(JSON.stringify(data));
 }
 

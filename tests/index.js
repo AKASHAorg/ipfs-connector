@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const chai = require('chai');
 const rimraf = require('rimraf');
+const statics = require('../src/statics');
 const constants = require('../src/constants');
 const bigObject = require('./stubs/bigObject.json');
 const expect = chai.expect;
@@ -121,6 +122,18 @@ describe('IpfsConnector', function () {
                 })
             });
     });
+    it('transforms object to buffer', function (){
+       const x = {a: 1};
+       const expected = Buffer.from(JSON.stringify(x));
+       const actual = statics.toDataBuffer(x);
+       expect(actual.toString()).to.equal(expected.toString());
+    });
+
+    it('preserves buffer', function (){
+        const initial = Buffer.from(JSON.stringify({q: 1}));
+        const actual = statics.toDataBuffer(initial);
+        expect(actual.toString()).to.equal(initial.toString());
+    });
 
     it('adds buffer to ipfs', function () {
         const actual = Buffer.from(JSON.stringify({ a: 1, b: 2 }));
@@ -231,6 +244,41 @@ describe('IpfsConnector', function () {
         return instance.api.findLinks('QmTymNDirRZeSjFXUUZkYHUL2TfyfMyJvG71AEPwx7yMUk', ['testFile'])
             .then((dagLinks) => {
                 expect(dagLinks).to.exist;
+            });
+    });
+
+    it('resolves link multihash', function () {
+        return instance.api.findLinks('QmTymNDirRZeSjFXUUZkYHUL2TfyfMyJvG71AEPwx7yMUk', ['testLink'])
+            .then((dagLinks) => {
+                expect(dagLinks).to.exist;
+                const links = dagLinks.map((link) => {
+                    return instance.api.get(link.multihash);
+                });
+                return Promise.all(links).then((data) => {
+                    expect(data).to.exist;
+                })
+            })
+    });
+
+    it('resolves a given link path', function () {
+        return instance.api
+            .addLinkFrom({ test: 3 }, 'firstLink', 'Qmd7rTCyKW8YTtPbxDnturBPd8KPaA3SK7B2uvcScTWVNj')
+            .then((result) => {
+                expect(result).to.exist;
+                return instance.api.addLink(
+                    { name: 'ref', hash: result.multihash, size: result.size },
+                    'QmTymNDirRZeSjFXUUZkYHUL2TfyfMyJvG71AEPwx7yMUk')
+                    .then((patched) => {
+                        expect(patched).to.exist;
+                        return instance.api.findLinkPath(patched.multihash, ['ref', 'firstLink'])
+                            .then((final) => {
+                                expect(final).to.exist;
+                                return instance.api.get(final[0].multihash)
+                                    .then((finalData) => {
+                                        expect(finalData).to.have.property('test');
+                                    })
+                            });
+                    })
             });
     });
 

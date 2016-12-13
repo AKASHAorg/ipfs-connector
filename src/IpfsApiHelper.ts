@@ -100,6 +100,27 @@ export class IpfsApiHelper {
 
     /**
      *
+     * @param start
+     * @param path
+     * @returns {Function}
+     */
+    public findLinkPath(start: string, path: string []) {
+        const _this = this;
+        return Promise.coroutine(function* () {
+            if(!multihash(start) || !path.length) {
+                throw new Error('Invalid path');
+            }
+            let index = 0;
+            let currentPath  =  yield _this.findLinks(start, path.slice(index, ++index));
+            while(index < path.length && currentPath.length) {
+                currentPath = yield _this.findLinks(currentPath[0].multihash, path.slice(index, ++index));
+            }
+            return currentPath;
+        })();
+    }
+
+    /**
+     *
      * @param hash
      * @returns {any}
      */
@@ -221,9 +242,19 @@ export class IpfsApiHelper {
     public addLinkFrom(data: any, name: string, linkTo: string) {
         return this.add(data)
             .then((result: {size: number, hash: string}) => {
-                const objLink = new DAGLink(name, result.size, result.hash);
-                return this.apiClient.object.patch.addLinkAsync(linkTo, objLink)
+                return this.addLink({name, size: result.size, hash: result.hash}, linkTo);
             })
+    }
+
+    /**
+     *
+     * @param link
+     * @param linkTo
+     * @returns {Thenable<U>|Bluebird<R>|Promise<T>|Promise<TResult2|TResult1>|Bluebird<U>|PromiseLike<TResult>|any}
+     */
+    public addLink(link: { name: string, size: number, hash: string }, linkTo: string){
+        const objLink = new DAGLink(link.name, link.size, link.hash);
+        return this.apiClient.object.patch.addLinkAsync(linkTo, objLink)
             .then((dagNode: any) => fromRawObject(dagNode));
     }
 }

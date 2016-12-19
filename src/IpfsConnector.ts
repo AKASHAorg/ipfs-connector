@@ -286,7 +286,7 @@ export class IpfsConnector extends EventEmitter {
      */
     private _init() {
         let init = childProcess.exec(
-            this.downloadManager.wrapper.path() + ' init',
+            `"${this.downloadManager.wrapper.path()}" init`,
             { env: this.options.extra.env },
             this._callbacks.get('ipfs.init')
         );

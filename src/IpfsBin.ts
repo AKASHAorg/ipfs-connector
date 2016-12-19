@@ -44,7 +44,7 @@ export class IpfsBin {
         const timeOut = setTimeout(() => {
             downloading = true;
             cb('', { downloading })
-        }, 600);
+        }, 2000);
         this.wrapper.run(['version'], (err: any) => {
             clearTimeout(timeOut);
             if (err) {

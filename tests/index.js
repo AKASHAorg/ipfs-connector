@@ -142,6 +142,13 @@ describe('IpfsConnector', function () {
         });
     });
 
+    it('adds raw buffer using api.addFile', function () {
+        const buf = Buffer.from(JSON.stringify({ a: 1, b: 2, c: 3 }));
+        return instance.api.addFile(buf).then(node => {
+            expect(node).to.have.property('hash');
+        });
+    });
+
     it('updates from existing object', function () {
         const initialObj = { a: 1, b: 2 };
         return instance.api.add(initialObj)

@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@types/bluebird": "3.0.36",
-    "@types/node": "6.0.48",
+    "@types/node": "6.0.52",
     "bin-wrapper": "3.0.2",
     "bluebird": "3.4.6",
     "ipfs-api": "12.1.0",
@@ -45,7 +45,7 @@
     "mocha-lcov-reporter": "1.2.0",
     "rimraf": "2.5.4",
     "standard-version": "4.0.0",
-    "tslint": "4.0.2",
+    "tslint": "4.1.1",
     "typescript": "2.1.4",
     "typings": "2.0.0"
   },

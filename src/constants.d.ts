@@ -6,6 +6,7 @@ export declare const events: {
     SERVICE_STOPPING: string;
     SERVICE_STOPPED: string;
     SERVICE_FAILED: string;
+    IPFS_INITING: string;
     IPFS_INIT: string;
     ERROR: string;
 };

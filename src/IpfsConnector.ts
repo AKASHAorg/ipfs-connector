@@ -37,6 +37,11 @@ export class IpfsConnector extends EventEmitter {
                  */
                 return this.emit(events.SERVICE_STARTED);
             }
+            if (data.includes('ipfs init')) {
+                setTimeout(() => this._init(), 500);
+                return this.emit(events.IPFS_INITING);
+            }
+
             this.serviceStatus.process = false;
             /**
              * @event IpfsConnector#SERVICE_FAILED
@@ -86,11 +91,6 @@ export class IpfsConnector extends EventEmitter {
         this._callbacks.set('events.IPFS_INIT', (err: string) => {
             if (!err) {
                 this.start();
-            }
-        });
-        this._callbacks.set('events.SERVICE_FAILED', (message: Buffer) => {
-            if (message.includes('ipfs init')) {
-                setTimeout(() => this._init(), 500);
             }
         });
     }
@@ -225,7 +225,6 @@ export class IpfsConnector extends EventEmitter {
         this.process.stderr.on('data', this._callbacks.get('process.stderr.on'));
         this.process.stdout.on('data', this._callbacks.get('process.stdout.on'));
         this.on(events.IPFS_INIT, this._callbacks.get('events.IPFS_INIT'));
-        this.on(events.SERVICE_FAILED, this._callbacks.get('events.SERVICE_FAILED'));
     }
 
     /**
@@ -236,7 +235,6 @@ export class IpfsConnector extends EventEmitter {
         this.process.stderr.removeListener('data', this._callbacks.get('process.stderr.on'));
         this.process.stdout.removeListener('data', this._callbacks.get('process.stdout.on'));
         this.removeListener(events.IPFS_INIT, this._callbacks.get('events.IPFS_INIT'));
-        this.removeListener(events.SERVICE_FAILED, this._callbacks.get('events.SERVICE_FAILED'));
     }
 
     /**

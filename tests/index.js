@@ -69,8 +69,13 @@ describe('IpfsConnector', function () {
         });
     });
     it('should start ipfs daemon', function (done) {
+        let inited = false;
+        instance.once(constants.events.IPFS_INITING, function (){
+            inited = true;
+        });
         instance.once(constants.events.SERVICE_STARTED, function () {
             expect(instance.serviceStatus.process).to.be.true;
+            expect(inited).to.be.true;
             setTimeout(done, 1000);
         });
         instance.start();

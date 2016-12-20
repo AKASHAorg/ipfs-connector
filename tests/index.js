@@ -31,18 +31,22 @@ describe('IpfsConnector', function () {
             done();
         });
     });
+
     beforeEach(function (done) {
         setTimeout(done, 1000);
     });
+
     it('should set .ipfs init folder', function () {
         const target = path.join(binTarget, 'ipfsTest');
         instance.setIpfsFolder(target);
         expect(instance.options.extra.env.IPFS_PATH).to.equal(target);
     });
+
     it('should set a different logger', function () {
         instance.setLogger(logger);
         expect(instance.logger).to.deep.equal(logger);
     });
+
     it.skip('should emit error when specifying bad ipfs-api address', function (done) {
         const memAddr = instance.options.apiAddress;
         instance.options.apiAddress = 'Qmxf09FAke';
@@ -55,6 +59,7 @@ describe('IpfsConnector', function () {
         const api = instance.api;
         expect(api).to.be.an('object');
     });
+
     it('should emit when downloading binaries', function (done) {
         let triggered = false;
         instance.on(constants.events.DOWNLOAD_STARTED, () => {
@@ -70,7 +75,7 @@ describe('IpfsConnector', function () {
     });
     it('should start ipfs daemon', function (done) {
         let inited = false;
-        instance.once(constants.events.IPFS_INITING, function (){
+        instance.once(constants.events.IPFS_INITING, function () {
             inited = true;
         });
         instance.once(constants.events.SERVICE_STARTED, function () {
@@ -127,15 +132,15 @@ describe('IpfsConnector', function () {
                 })
             });
     });
-    it('transforms object to buffer', function (){
-       const x = {a: 1};
-       const expected = Buffer.from(JSON.stringify(x));
-       const actual = statics.toDataBuffer(x);
-       expect(actual.toString()).to.equal(expected.toString());
+    it('transforms object to buffer', function () {
+        const x = { a: 1 };
+        const expected = Buffer.from(JSON.stringify(x));
+        const actual = statics.toDataBuffer(x);
+        expect(actual.toString()).to.equal(expected.toString());
     });
 
-    it('preserves buffer', function (){
-        const initial = Buffer.from(JSON.stringify({q: 1}));
+    it('preserves buffer', function () {
+        const initial = Buffer.from(JSON.stringify({ q: 1 }));
         const actual = statics.toDataBuffer(initial);
         expect(actual.toString()).to.equal(initial.toString());
     });

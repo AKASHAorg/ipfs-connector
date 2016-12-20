@@ -47,7 +47,7 @@ describe('IpfsConnector', function () {
         expect(instance.logger).to.deep.equal(logger);
     });
 
-    it.skip('should emit error when specifying bad ipfs-api address', function (done) {
+    it('should emit error when specifying bad ipfs-api address', function (done) {
         const memAddr = instance.options.apiAddress;
         instance.options.apiAddress = 'Qmxf09FAke';
         instance.once(constants.events.ERROR, (message) => {
@@ -60,19 +60,10 @@ describe('IpfsConnector', function () {
         expect(api).to.be.an('object');
     });
 
-    it('should emit when downloading binaries', function (done) {
-        let triggered = false;
-        instance.on(constants.events.DOWNLOAD_STARTED, () => {
-            triggered = true;
-        });
-        instance.checkExecutable().then(() => {
-            expect(triggered).to.be.true;
-            done();
-        }).catch((err) => {
-            expect(triggered).to.be.true;
-            done();
-        });
+    it('should check for binaries', function () {
+        return instance.checkExecutable();
     });
+
     it('should start ipfs daemon', function (done) {
         let inited = false;
         instance.once(constants.events.IPFS_INITING, function () {
@@ -85,12 +76,14 @@ describe('IpfsConnector', function () {
         });
         instance.start();
     });
+
     it('should get ipfs config addresses', function () {
         expect(instance.api).to.exist;
         return instance.getPorts().then((ports) => {
             expect(ports.api).to.exist;
         });
     });
+
     it('should set ipfs GATEWAY port', function () {
         return instance.setPorts({ gateway: 8092 }).then((ports) => {
             expect(ports).to.exist;

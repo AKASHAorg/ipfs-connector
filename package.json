@@ -31,10 +31,10 @@
   },
   "dependencies": {
     "@types/bluebird": "3.0.37",
-    "@types/node": "6.0.57",
+    "@types/node": "7.0.4",
     "bin-wrapper": "3.0.2",
     "bluebird": "3.4.7",
-    "ipfs-api": "12.1.2",
+    "ipfs-api": "12.1.4",
     "is-ipfs": "0.2.1"
   },
   "devDependencies": {
@@ -46,7 +46,7 @@
     "rimraf": "2.5.4",
     "standard-version": "4.0.0",
     "tslint": "4.3.1",
-    "typescript": "2.1.4",
+    "typescript": "2.1.5",
     "typings": "2.1.0"
   },
   "homepage": "https://github.com/AkashaProject/ipfs-connector#readme",

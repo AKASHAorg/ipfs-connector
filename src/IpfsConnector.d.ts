@@ -20,12 +20,12 @@ export declare class IpfsConnector extends EventEmitter {
             detached: boolean;
         };
     };
+    logger: any;
     serviceStatus: {
         api: boolean;
         process: boolean;
     };
     private _callbacks;
-    private logger;
     private _api;
     constructor(enforcer: any);
     static getInstance(): IpfsConnector;

@@ -34,7 +34,7 @@
     "@types/node": "7.0.4",
     "bin-wrapper": "3.0.2",
     "bluebird": "3.4.7",
-    "ipfs-api": "12.1.4",
+    "ipfs-api": "12.1.5",
     "is-ipfs": "0.2.1"
   },
   "devDependencies": {
@@ -45,7 +45,7 @@
     "mocha-lcov-reporter": "1.2.0",
     "rimraf": "2.5.4",
     "standard-version": "4.0.0",
-    "tslint": "4.3.1",
+    "tslint": "4.4.2",
     "typescript": "2.1.5",
     "typings": "2.1.0"
   },

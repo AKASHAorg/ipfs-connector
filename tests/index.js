@@ -24,7 +24,7 @@ describe('IpfsConnector', function () {
         warn: function () {
         }
     };
-    this.timeout(60000);
+    this.timeout(90000);
     before(function (done) {
         instance.setBinPath(binTarget);
         rimraf(binTarget, function () {

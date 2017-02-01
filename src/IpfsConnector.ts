@@ -17,9 +17,9 @@ export class IpfsConnector extends EventEmitter {
     private process: childProcess.ChildProcess;
     public downloadManager = new IpfsBin();
     public options = options;
+    public logger: any = console;
     public serviceStatus: { api: boolean, process: boolean } = { process: false, api: false };
     private _callbacks = new Map();
-    private logger: any = console;
     private _api: IpfsApiHelper;
 
     /**
@@ -174,7 +174,8 @@ export class IpfsConnector extends EventEmitter {
                 if(err){
                     this.logger.error(err);
                     this.emit(events.BINARY_CORRUPTED, err);
-                    return reject(err);
+                    this.downloadManager.deleteBin().then(() => reject(err));
+                    return;
                 }
 
                 if(data.binPath){

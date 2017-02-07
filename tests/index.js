@@ -179,7 +179,7 @@ describe('IpfsConnector', function () {
             })
     });
 
-    it('gets hash stats', function () {
+    it.skip('gets hash stats', function () {
         return instance.api.getStats('QmYftndCvcEiuSZRX7njywX2AGSeHY2ASa7VryCq1mKwEw')
             .then((stats) => {
                 expect(stats.CumulativeSize).to.equal(1700);

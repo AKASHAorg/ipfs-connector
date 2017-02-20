@@ -1,6 +1,6 @@
 {
   "name": "@akashaproject/ipfs-connector",
-  "version": "1.7.7",
+  "version": "1.7.8",
   "description": "Ipfs download/process manager",
   "main": "index.js",
   "types": "index.d.ts",
@@ -34,7 +34,7 @@
     "@types/node": "7.0.5",
     "bin-wrapper": "3.0.2",
     "bluebird": "3.4.7",
-    "ipfs-api": "12.1.6",
+    "ipfs-api": "12.1.7",
     "is-ipfs": "0.3.0"
   },
   "devDependencies": {
@@ -43,10 +43,10 @@
     "istanbul": "0.4.5",
     "mocha": "3.2.0",
     "mocha-lcov-reporter": "1.2.0",
-    "rimraf": "2.5.4",
+    "rimraf": "2.6.0",
     "standard-version": "4.0.0",
     "tslint": "4.4.2",
-    "typescript": "2.1.5",
+    "typescript": "2.1.6",
     "typings": "2.1.0"
   },
   "homepage": "https://github.com/AkashaProject/ipfs-connector#readme",

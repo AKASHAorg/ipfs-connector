@@ -61,6 +61,11 @@ export class IpfsConnector extends EventEmitter {
                  */
                 this.emit(events.SERVICE_STARTED);
             }
+
+            if(data.includes("Run migrations")){
+                this.process.stdin.write("y");
+                this.process.stdin.end();
+            }
         });
         this._callbacks.set('ipfs.exit', (code: number, signal: string) => {
             this.serviceStatus.process = false;

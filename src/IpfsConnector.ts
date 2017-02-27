@@ -211,7 +211,6 @@ export class IpfsConnector extends EventEmitter {
     }
 
     private _start(binPath: string) {
-        this.options.extra.env.ipfs = binPath;
         this.process = childProcess.spawn(
             binPath,
             this.options.args,

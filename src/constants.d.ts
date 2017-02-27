@@ -18,6 +18,7 @@ export declare const options: {
     extra: {
         env: {} & {
             IPFS_PATH: string;
+            ipfs: string;
         };
         detached: boolean;
     };

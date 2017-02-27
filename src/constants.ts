@@ -20,7 +20,7 @@ export const options = {
     args: ['daemon'],
     executable: '',
     extra: {
-        env: Object.assign({}, { IPFS_PATH: pathJoin(homedir(), '.ipfs') }),
+        env: Object.assign({}, { IPFS_PATH: pathJoin(homedir(), '.ipfs'), ipfs: '' }),
         detached: true
     }
 };

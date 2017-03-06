@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var IpfsConnector_1 = require("./src/IpfsConnector");
 exports.IpfsConnector = IpfsConnector_1.IpfsConnector;
 var IpfsApiHelper_1 = require("./src/IpfsApiHelper");

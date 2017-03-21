@@ -26,5 +26,4 @@ export declare class IpfsApiHelper {
         size: number;
         hash: string;
     }, linkTo: string): any;
-    checkVersion(): any;
 }

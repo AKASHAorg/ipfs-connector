@@ -114,7 +114,7 @@ describe('IpfsConnector', function () {
             })
     });
     it('checks ipfs version', function () {
-        return instance.api.checkVersion().then((res) => {
+        return instance.checkVersion().then((res) => {
             expect(res).to.exist;
         })
     });

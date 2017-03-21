@@ -4,7 +4,6 @@ import { fromRawData, toDataBuffer, fromRawObject } from './statics';
 import { multihash } from 'is-ipfs';
 import { Readable } from 'stream';
 import { DAGLink, DAGNode } from 'ipld-dag-pb';
-import { version as requiredVersion } from './IpfsBin';
 
 export class IpfsApiHelper {
     public apiClient: any;
@@ -257,16 +256,5 @@ export class IpfsApiHelper {
         const objLink = new DAGLink(link.name, link.size, link.hash);
         return this.apiClient.object.patch.addLinkAsync(linkTo, objLink)
             .then((dagNode: any) => fromRawObject(dagNode));
-    }
-
-    /**
-     * @returns {PromiseLike<TResult|boolean>|Bluebird<boolean>|Promise<TResult|boolean>|Promise<boolean>|Bluebird<R>|Promise<TResult2|boolean>|any}
-     */
-    public checkVersion() {
-        return this.apiClient.versionAsync().then(
-            (data: any) => {
-                return data.version === requiredVersion;
-            }
-        )
     }
 }

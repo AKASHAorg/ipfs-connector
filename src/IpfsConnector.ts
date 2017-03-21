@@ -1,7 +1,7 @@
 /// <reference path="../typings/main.d.ts"/>
 
 import * as Promise from 'bluebird';
-import { IpfsBin } from './IpfsBin';
+import { IpfsBin, version as requiredVersion } from './IpfsBin';
 import { IpfsApiHelper } from './IpfsApiHelper';
 import * as ipfsApi from 'ipfs-api';
 import { EventEmitter } from 'events';
@@ -18,7 +18,7 @@ export class IpfsConnector extends EventEmitter {
     public downloadManager: IpfsBin = new IpfsBin();
     public options = options;
     public logger: any = console;
-    public serviceStatus: { api: boolean, process: boolean } = { process: false, api: false };
+    public serviceStatus: { api: boolean, process: boolean, version: string } = { process: false, api: false, version: '' };
     private _callbacks = new Map();
     private _api: IpfsApiHelper;
 
@@ -268,7 +268,6 @@ export class IpfsConnector extends EventEmitter {
 
     /**
      * Stop ipfs daemon
-     * @param signal
      * @returns {IpfsConnector}
      */
     public stop() {
@@ -346,5 +345,17 @@ export class IpfsConnector extends EventEmitter {
             }
             return set;
         });
+    }
+
+    /**
+     * @returns {PromiseLike<TResult|boolean>|Bluebird<boolean>|Promise<TResult|boolean>|Promise<boolean>|Bluebird<R>|Promise<TResult2|boolean>|any}
+     */
+    public checkVersion() {
+        return this.api.apiClient.versionAsync().then(
+            (data: any) => {
+                this.serviceStatus.version = data.version;
+                return data.version === requiredVersion;
+            }
+        )
     }
 }

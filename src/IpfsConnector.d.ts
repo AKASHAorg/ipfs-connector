@@ -22,6 +22,7 @@ export declare class IpfsConnector extends EventEmitter {
     serviceStatus: {
         api: boolean;
         process: boolean;
+        version: string;
     };
     private _callbacks;
     private _api;
@@ -50,4 +51,5 @@ export declare class IpfsConnector extends EventEmitter {
         api?: number;
         swarm?: number;
     }, restart?: boolean): Promise<any>;
+    checkVersion(): any;
 }

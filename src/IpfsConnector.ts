@@ -271,13 +271,13 @@ export class IpfsConnector extends EventEmitter {
      * @param signal
      * @returns {IpfsConnector}
      */
-    public stop(signal = 'SIGINT') {
+    public stop() {
         this.emit(events.SERVICE_STOPPING);
         this._api = null;
         this.options.retry = true;
         this.serviceStatus.api = false;
         if (this.process) {
-            this.process.kill(signal);
+            this.process.kill();
             this.process = null;
             this.serviceStatus.process = false;
             return this;

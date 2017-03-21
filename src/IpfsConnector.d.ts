@@ -38,7 +38,7 @@ export declare class IpfsConnector extends EventEmitter {
     private _attachStartingEvents();
     private _flushStartingEvents();
     private _pipeStd();
-    stop(signal?: string): this;
+    stop(): this;
     private _init();
     getPorts(): Promise<{
         gateway: number;

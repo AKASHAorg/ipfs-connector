@@ -1,5 +1,5 @@
 "use strict";
-const { IpfsConnector, IpfsApiHelper } = require('../index');
+const {IpfsConnector, IpfsApiHelper} = require('../index');
 const path = require('path');
 const fs = require('fs');
 const chai = require('chai');
@@ -85,19 +85,19 @@ describe('IpfsConnector', function () {
     });
 
     it('should set ipfs GATEWAY port', function () {
-        return instance.setPorts({ gateway: 8092 }).then((ports) => {
+        return instance.setPorts({gateway: 8092}).then((ports) => {
             expect(ports).to.exist;
         });
     });
 
     it('should set ipfs API port', function () {
-        return instance.setPorts({ api: 5041 }).then((ports) => {
+        return instance.setPorts({api: 5041}).then((ports) => {
             expect(ports).to.exist;
         });
     });
 
     it('should set ipfs SWARM port', function () {
-        return instance.setPorts({ swarm: 4041 }).then((ports) => {
+        return instance.setPorts({swarm: 4041}).then((ports) => {
             expect(ports).to.exist;
         });
     });
@@ -107,16 +107,21 @@ describe('IpfsConnector', function () {
             expect(instance.serviceStatus.process).to.be.true;
             setTimeout(done, 1000);
         });
-        instance.setPorts({ api: 5041, swarm: 4041, gateway: 8040 }, true)
+        instance.setPorts({api: 5041, swarm: 4041, gateway: 8040}, true)
             .then((ports) => {
                 expect(instance.options.apiAddress).to.equal('/ip4/127.0.0.1/tcp/5041');
                 expect(ports).to.exist;
             })
     });
+    it('checks ipfs version', function () {
+        return instance.api.checkVersion().then((res) => {
+            expect(res).to.exist;
+        })
+    });
 
     it('adds an object to ipfs', function () {
         expect(instance.api).to.be.defined;
-        return instance.api.add({ data: '{}' })
+        return instance.api.add({data: '{}'})
             .then((node) => {
                 expect(node.hash).to.be.defined;
                 instance.api.get(node.hash).then((data1) => {
@@ -126,37 +131,37 @@ describe('IpfsConnector', function () {
             });
     });
     it('transforms object to buffer', function () {
-        const x = { a: 1 };
+        const x = {a: 1};
         const expected = Buffer.from(JSON.stringify(x));
         const actual = statics.toDataBuffer(x);
         expect(actual.toString()).to.equal(expected.toString());
     });
 
     it('preserves buffer', function () {
-        const initial = Buffer.from(JSON.stringify({ q: 1 }));
+        const initial = Buffer.from(JSON.stringify({q: 1}));
         const actual = statics.toDataBuffer(initial);
         expect(actual.toString()).to.equal(initial.toString());
     });
 
     it('adds buffer to ipfs', function () {
-        const actual = Buffer.from(JSON.stringify({ a: 1, b: 2 }));
+        const actual = Buffer.from(JSON.stringify({a: 1, b: 2}));
         return instance.api.add(actual).then(node => {
             expect(node).to.have.property('hash');
         });
     });
 
     it('adds raw buffer using api.addFile', function () {
-        const buf = Buffer.from(JSON.stringify({ a: 1, b: 2, c: 3 }));
+        const buf = Buffer.from(JSON.stringify({a: 1, b: 2, c: 3}));
         return instance.api.addFile(buf).then(node => {
             expect(node).to.have.property('hash');
         });
     });
 
     it('updates from existing object', function () {
-        const initialObj = { a: 1, b: 2 };
+        const initialObj = {a: 1, b: 2};
         return instance.api.add(initialObj)
             .then((node) => {
-                const patchAttr = { b: 3 };
+                const patchAttr = {b: 3};
                 instance.api.updateObject(node.hash, patchAttr).then((result) => {
                     result.data = JSON.parse(result.data);
                     expect(result.data.a).to.equal(initialObj.a);
@@ -196,7 +201,7 @@ describe('IpfsConnector', function () {
 
     it('constructs object link from hash', function () {
         return instance.api
-            .addLinkFrom({ coco: 1 }, 'testLink', 'QmUdVKL1h4As9qKrq4aixAFGUZvsFu17twga4PBd6GzpCG')
+            .addLinkFrom({coco: 1}, 'testLink', 'QmUdVKL1h4As9qKrq4aixAFGUZvsFu17twga4PBd6GzpCG')
             .then((result) => {
                 expect(result.links.length).to.be.above(0);
                 return instance.api.getStats(result.multihash).then((stats) => {
@@ -231,10 +236,10 @@ describe('IpfsConnector', function () {
     });
 
     it('creates node with links', function () {
-        const links = [{ name: 'testFile', size: 12, multihash: 'QmPMH5GFmLP2oU8dK7i4iWJyX6FpgeK3gT6ZC6xLLZQ9cW' },
-            { name: 'testLink', size: 12, multihash: 'Qmd7rTCyKW8YTtPbxDnturBPd8KPaA3SK7B2uvcScTWVNj' }];
+        const links = [{name: 'testFile', size: 12, multihash: 'QmPMH5GFmLP2oU8dK7i4iWJyX6FpgeK3gT6ZC6xLLZQ9cW'},
+            {name: 'testLink', size: 12, multihash: 'Qmd7rTCyKW8YTtPbxDnturBPd8KPaA3SK7B2uvcScTWVNj'}];
         return instance.api
-            .createNode({ test: 2 }, links)
+            .createNode({test: 2}, links)
             .then((result) => {
                 expect(result).to.exist;
             })
@@ -279,11 +284,11 @@ describe('IpfsConnector', function () {
 
     it('resolves a given link path', function () {
         return instance.api
-            .addLinkFrom({ test: 3 }, 'firstLink', 'Qmd7rTCyKW8YTtPbxDnturBPd8KPaA3SK7B2uvcScTWVNj')
+            .addLinkFrom({test: 3}, 'firstLink', 'Qmd7rTCyKW8YTtPbxDnturBPd8KPaA3SK7B2uvcScTWVNj')
             .then((result) => {
                 expect(result).to.exist;
                 return instance.api.addLink(
-                    { name: 'ref', hash: result.multihash, size: result.size },
+                    {name: 'ref', hash: result.multihash, size: result.size},
                     'QmTymNDirRZeSjFXUUZkYHUL2TfyfMyJvG71AEPwx7yMUk')
                     .then((patched) => {
                         expect(patched).to.exist;

@@ -4,6 +4,7 @@ import { fromRawData, toDataBuffer, fromRawObject } from './statics';
 import { multihash } from 'is-ipfs';
 import { Readable } from 'stream';
 import { DAGLink, DAGNode } from 'ipld-dag-pb';
+import { version as requiredVersion } from './IpfsBin';
 
 export class IpfsApiHelper {
     public apiClient: any;
@@ -94,7 +95,7 @@ export class IpfsApiHelper {
         return this.getObject(hash, true)
             .then((dagNode: any) => {
                 const format = dagNode.toJSON();
-                return format.links.filter((link: any) => names.indexOf(link.name)!== -1)
+                return format.links.filter((link: any) => names.indexOf(link.name) !== -1)
             });
     }
 
@@ -106,13 +107,13 @@ export class IpfsApiHelper {
      */
     public findLinkPath(start: string, path: string []) {
         const _this = this;
-        return Promise.coroutine(function* () {
-            if(!multihash(start) || !path.length) {
+        return Promise.coroutine(function*() {
+            if (!multihash(start) || !path.length) {
                 throw new Error('Invalid path');
             }
             let index = 0;
-            let currentPath  =  yield _this.findLinks(start, path.slice(index, ++index));
-            while(index < path.length && currentPath.length) {
+            let currentPath = yield _this.findLinks(start, path.slice(index, ++index));
+            while (index < path.length && currentPath.length) {
                 currentPath = yield _this.findLinks(currentPath[0].multihash, path.slice(index, ++index));
             }
             return currentPath;
@@ -153,7 +154,7 @@ export class IpfsApiHelper {
             .getAsync(objectHash, { enc: IpfsApiHelper.ENC_BASE58 })
             .timeout(this.REQUEST_TIMEOUT)
             .then((rawData: any) => {
-                if(full) {
+                if (full) {
                     return rawData;
                 }
                 return fromRawData(rawData);
@@ -241,8 +242,8 @@ export class IpfsApiHelper {
      */
     public addLinkFrom(data: any, name: string, linkTo: string) {
         return this.add(data)
-            .then((result: {size: number, hash: string}) => {
-                return this.addLink({name, size: result.size, hash: result.hash}, linkTo);
+            .then((result: { size: number, hash: string }) => {
+                return this.addLink({ name, size: result.size, hash: result.hash }, linkTo);
             })
     }
 
@@ -252,9 +253,20 @@ export class IpfsApiHelper {
      * @param linkTo
      * @returns {Thenable<U>|Bluebird<R>|Promise<T>|Promise<TResult2|TResult1>|Bluebird<U>|PromiseLike<TResult>|any}
      */
-    public addLink(link: { name: string, size: number, hash: string }, linkTo: string){
+    public addLink(link: { name: string, size: number, hash: string }, linkTo: string) {
         const objLink = new DAGLink(link.name, link.size, link.hash);
         return this.apiClient.object.patch.addLinkAsync(linkTo, objLink)
             .then((dagNode: any) => fromRawObject(dagNode));
+    }
+
+    /**
+     * @returns {PromiseLike<TResult|boolean>|Bluebird<boolean>|Promise<TResult|boolean>|Promise<boolean>|Bluebird<R>|Promise<TResult2|boolean>|any}
+     */
+    public checkVersion() {
+        return this.apiClient.versionAsync().then(
+            (data: any) => {
+                return data.version === requiredVersion;
+            }
+        )
     }
 }

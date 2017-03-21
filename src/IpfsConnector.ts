@@ -15,7 +15,7 @@ const symbol = Symbol();
 
 export class IpfsConnector extends EventEmitter {
     private process: childProcess.ChildProcess;
-    public downloadManager = new IpfsBin();
+    public downloadManager: IpfsBin = new IpfsBin();
     public options = options;
     public logger: any = console;
     public serviceStatus: { api: boolean, process: boolean } = { process: false, api: false };
@@ -62,7 +62,7 @@ export class IpfsConnector extends EventEmitter {
                 this.emit(events.SERVICE_STARTED);
             }
 
-            if(data.includes("Run migrations")){
+            if (data.includes("Run migrations")) {
                 this.process.stdin.write("y");
                 this.process.stdin.end();
             }
@@ -175,25 +175,25 @@ export class IpfsConnector extends EventEmitter {
     public checkExecutable(): Promise<{}> {
         return new Promise((resolve, reject) => {
             this.downloadManager.check(
-                (err: Error, data:{binPath?: string, downloading?: boolean}) => {
-                if(err){
-                    this.logger.error(err);
-                    this.emit(events.BINARY_CORRUPTED, err);
-                    this.downloadManager.deleteBin().then(() => reject(err));
-                    return;
-                }
+                (err: Error, data: { binPath?: string, downloading?: boolean }) => {
+                    if (err) {
+                        this.logger.error(err);
+                        this.emit(events.BINARY_CORRUPTED, err);
+                        this.downloadManager.deleteBin().then(() => reject(err));
+                        return;
+                    }
 
-                if(data.binPath){
-                    return resolve(data.binPath);
-                }
+                    if (data.binPath) {
+                        return resolve(data.binPath);
+                    }
 
-                if(data.downloading){
-                    /**
-                     * @event IpfsConnector#DOWNLOAD_STARTED
-                     */
-                    this.emit(events.DOWNLOAD_STARTED);
-                }
-            })
+                    if (data.downloading) {
+                        /**
+                         * @event IpfsConnector#DOWNLOAD_STARTED
+                         */
+                        this.emit(events.DOWNLOAD_STARTED);
+                    }
+                })
         });
     }
 
@@ -312,7 +312,8 @@ export class IpfsConnector extends EventEmitter {
             });
     }
 
-    public setPorts(ports: {gateway?: number, api?: number, swarm?: number}, restart = false) {
+
+    public setPorts(ports: { gateway?: number, api?: number, swarm?: number }, restart = false) {
         const setup: any[] = [];
         if (ports.hasOwnProperty('gateway')) {
             setup.push(

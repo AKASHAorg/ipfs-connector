@@ -30,7 +30,7 @@
     "url": "https://github.com/AkashaProject/ipfs-connector/issues"
   },
   "dependencies": {
-    "@types/bluebird": "3.5.0",
+    "@types/bluebird": "3.5.1",
     "@types/node": "7.0.8",
     "bin-wrapper": "3.0.2",
     "bluebird": "3.5.0",

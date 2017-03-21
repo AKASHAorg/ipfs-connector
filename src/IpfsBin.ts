@@ -5,7 +5,7 @@ import { unlink } from 'fs';
 import * as path from 'path';
 import Wrapper = require('bin-wrapper');
 
-const version = '0.4.7';
+export const version = '0.4.7';
 const base: string = `https://dist.ipfs.io/go-ipfs/v${version}/go-ipfs_v${version}_`;
 const defaultTarget = path.join(__dirname, 'bin');
 
@@ -52,11 +52,11 @@ export class IpfsBin {
             }
             const response = { binPath: this.getPath() };
 
-            if(!downloading){
+            if (!downloading) {
                 return cb('', response);
             }
 
-            setTimeout(()=> cb('', response), 300);
+            setTimeout(() => cb('', response), 300);
         });
     }
 

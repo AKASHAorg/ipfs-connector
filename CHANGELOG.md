@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.7.17"></a>
+## [1.7.17](https://github.com/AkashaProject/ipfs-connector/compare/v1.7.16...v1.7.17) (2017-03-23)
+
+
+
 <a name="1.7.16"></a>
 ## [1.7.16](https://github.com/AkashaProject/ipfs-connector/compare/v1.7.15...v1.7.16) (2017-03-21)
 

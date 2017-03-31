@@ -179,7 +179,7 @@ export class IpfsConnector extends EventEmitter {
                     if (err) {
                         this.logger.error(err);
                         this.emit(events.BINARY_CORRUPTED, err);
-                        this.downloadManager.deleteBin().then(() => reject(err));
+                        this.downloadManager.deleteBin().then(() => reject(err)).catch((err1) => reject(err));
                         return;
                     }
 

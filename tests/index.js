@@ -74,7 +74,12 @@ describe('IpfsConnector', function () {
             expect(inited).to.be.true;
             setTimeout(done, 1000);
         });
-        instance.start();
+        instance.start().then(function (api){
+            expect(api).to.have.ownProperty('apiClient');
+        }).catch(function(err){
+            expect(err).to.be.undefined;
+            done();
+        });
     });
 
     it('should get ipfs config addresses', function () {
@@ -91,13 +96,13 @@ describe('IpfsConnector', function () {
     });
 
     it('should set ipfs API port', function () {
-        return instance.setPorts({api: 5041}).then((ports) => {
+        return instance.setPorts({api: 5043}).then((ports) => {
             expect(ports).to.exist;
         });
     });
 
     it('should set ipfs SWARM port', function () {
-        return instance.setPorts({swarm: 4041}).then((ports) => {
+        return instance.setPorts({swarm: 4043}).then((ports) => {
             expect(ports).to.exist;
         });
     });

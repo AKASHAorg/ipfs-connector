@@ -94,7 +94,7 @@ export class IpfsApiHelper {
         return this.getObject(hash, true)
             .then((dagNode: any) => {
                 const format = dagNode.toJSON();
-                return format.links.filter((link: any) => names.indexOf(link.name) !== -1)
+                return format.links.filter((link: any) => names.indexOf(link.name) !== -1);
             });
     }
 
@@ -243,7 +243,7 @@ export class IpfsApiHelper {
         return this.add(data)
             .then((result: { size: number, hash: string }) => {
                 return this.addLink({ name, size: result.size, hash: result.hash }, linkTo);
-            })
+            });
     }
 
     /**

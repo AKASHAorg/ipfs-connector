@@ -26,7 +26,7 @@ import { IpfsConnector } from '@akashaproject/ipfs-connector';
 const instance = IpfsConnector.getInstance();
 
 // start ipfs daemon and download binaries if needed
-instance.start().then(...);
+instance.start().then((api) => {});
 
 // stop daemon
 instance.stop()
@@ -39,7 +39,6 @@ instance.api.add(object | Buffer)
 instance.api.get('ipfs hash')
 
 // resolve ipfs hash object paths(see tests)
-instance.api.resolve('QmTCMGWApewThNp64JBg9yzhiZGKKDHigS2Y45Tyg1HG8r/c1')
 
 // access default js-ipfs-api from
 instance.api.apiClient

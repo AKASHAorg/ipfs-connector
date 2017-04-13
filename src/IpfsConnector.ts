@@ -62,8 +62,8 @@ export class IpfsConnector extends EventEmitter {
                 this.emit(events.SERVICE_STARTED);
             }
 
-            if (data.includes("Run migrations")) {
-                this.process.stdin.write("y");
+            if (data.includes('Run migrations')) {
+                this.process.stdin.write('y');
                 this.process.stdin.end();
             }
         });
@@ -193,7 +193,7 @@ export class IpfsConnector extends EventEmitter {
                          */
                         this.emit(events.DOWNLOAD_STARTED);
                     }
-                })
+                });
         });
     }
 
@@ -211,16 +211,21 @@ export class IpfsConnector extends EventEmitter {
     }
 
     private _start(binPath: string) {
-        this.process = childProcess.spawn(
-            binPath,
-            this.options.args,
-            this.options.extra
-        );
-        this.once(events.SERVICE_STARTED, () => {
-            this._flushStartingEvents();
+        return new Promise((resolve, reject) => {
+            this.process = childProcess.spawn(
+                binPath,
+                this.options.args,
+                this.options.extra
+            );
+            this.once(events.ERROR, reject);
+            this.once(events.SERVICE_STARTED, () => {
+                this._flushStartingEvents();
+                this.removeListener(events.ERROR, reject);
+                resolve(this.api);
+            });
+            this._pipeStd();
+            this._attachStartingEvents();
         });
-        this._pipeStd();
-        this._attachStartingEvents();
     }
 
     /**
@@ -261,7 +266,7 @@ export class IpfsConnector extends EventEmitter {
                 this.process.stderr.removeListener('data', logError);
                 this.process.stdout.removeListener('data', logInfo);
                 this.process.removeListener('exit', this._callbacks.get('ipfs.exit'));
-                this.process.removeListener('error', this._callbacks.get('ipfs.error'))
+                this.process.removeListener('error', this._callbacks.get('ipfs.error'));
             }
         });
     }
@@ -356,6 +361,6 @@ export class IpfsConnector extends EventEmitter {
                 this.serviceStatus.version = data.version;
                 return data.version === requiredVersion;
             }
-        )
+        );
     }
 }

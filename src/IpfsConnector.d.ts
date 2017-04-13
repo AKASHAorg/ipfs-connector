@@ -34,7 +34,7 @@ export declare class IpfsConnector extends EventEmitter {
     setConfig(option: string, value: string): void;
     setIpfsFolder(target: string): void;
     checkExecutable(): Promise<{}>;
-    start(): Promise<void>;
+    start(): Promise<{}>;
     private _start(binPath);
     private _attachStartingEvents();
     private _flushStartingEvents();

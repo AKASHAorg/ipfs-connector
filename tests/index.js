@@ -1,5 +1,5 @@
 "use strict";
-const {IpfsConnector, IpfsApiHelper} = require('../index');
+const {IpfsConnector, IpfsApiHelper, IpfsJsConnector} = require('../index');
 const path = require('path');
 const fs = require('fs');
 const chai = require('chai');
@@ -8,116 +8,25 @@ const statics = require('../src/statics');
 const constants = require('../src/constants');
 const bigObject = require('./stubs/bigObject.json');
 const expect = chai.expect;
-describe('IpfsConnector', function () {
-    let instance = IpfsConnector.getInstance();
-    let binTarget = path.join(__dirname, 'bin');
-    let filePath = path.join(__dirname, 'stubs', 'example.json');
-    const file = fs.readFileSync(filePath);
-    let bigObjHash = '';
-    let bigObjHashLink = '';
-    let rootHash = '';
-    const logger = {
-        info: function () {
-        },
-        error: function () {
-        },
-        warn: function () {
-        }
-    };
-    this.timeout(90000);
-    before(function (done) {
-        instance.setBinPath(binTarget);
-        rimraf(binTarget, function () {
-            done();
-        });
-    });
+let instance;
+let binTarget = path.join(__dirname, 'bin');
+let filePath = path.join(__dirname, 'stubs', 'example.json');
 
-    beforeEach(function (done) {
-        setTimeout(done, 1000);
-    });
+const file = fs.readFileSync(filePath);
+let bigObjHash = '';
+let bigObjHashLink = '';
+let rootHash = '';
+const logger = {
+    info: function () {
+    },
+    error: function () {
+    },
+    warn: function () {
+    }
+};
 
-    it('should set .ipfs init folder', function () {
-        const target = path.join(binTarget, 'ipfsTest');
-        instance.setIpfsFolder(target);
-        expect(instance.options.extra.env.IPFS_PATH).to.equal(target);
-    });
+const runSharedTests = function(){
 
-    it('should set a different logger', function () {
-        instance.setLogger(logger);
-        expect(instance.logger).to.deep.equal(logger);
-    });
-
-    it('should emit error when specifying bad ipfs-api address', function (done) {
-        const memAddr = instance.options.apiAddress;
-        instance.options.apiAddress = 'Qmxf09FAke';
-        instance.once(constants.events.ERROR, (message) => {
-            expect(message).to.be.defined;
-            expect(instance.serviceStatus.api).to.be.false;
-            instance.options.apiAddress = memAddr;
-            done();
-        });
-        const api = instance.api;
-        expect(api).to.be.an('object');
-    });
-
-    it('should check for binaries', function () {
-        return instance.checkExecutable();
-    });
-
-    it('should start ipfs daemon', function (done) {
-        let inited = false;
-        instance.once(constants.events.IPFS_INITING, function () {
-            inited = true;
-        });
-        instance.once(constants.events.SERVICE_STARTED, function () {
-            expect(instance.serviceStatus.process).to.be.true;
-            expect(inited).to.be.true;
-            setTimeout(done, 1000);
-        });
-        instance.start().then(function (api){
-            expect(api).to.have.ownProperty('apiClient');
-        }).catch(function(err){
-            expect(err).to.be.undefined;
-            done();
-        });
-    });
-
-    it('should get ipfs config addresses', function () {
-        expect(instance.api).to.exist;
-        return instance.getPorts().then((ports) => {
-            expect(ports.api).to.exist;
-        });
-    });
-
-    it('should set ipfs GATEWAY port', function () {
-        return instance.setPorts({gateway: 8092}).then((ports) => {
-            expect(ports).to.exist;
-        });
-    });
-
-    it('should set ipfs API port', function () {
-        return instance.setPorts({api: 5043}).then((ports) => {
-            expect(ports).to.exist;
-        });
-    });
-
-    it('should set ipfs SWARM port', function () {
-        return instance.setPorts({swarm: 4043}).then((ports) => {
-            expect(ports).to.exist;
-        });
-    });
-
-    it('restarts after setting ports', function (done) {
-        instance.once(constants.events.SERVICE_STARTED, function () {
-            expect(instance.serviceStatus.process).to.be.true;
-            setTimeout(done, 1000);
-        });
-        instance.setPorts({api: 5041, swarm: 4041, gateway: 8040}, true)
-            .then((ports) => {
-                expect(instance.options.apiAddress).to.equal('/ip4/127.0.0.1/tcp/5041');
-                expect(ports).to.exist;
-            })
-    });
     it('checks ipfs version', function () {
         return instance.checkVersion().then((res) => {
             expect(res).to.exist;
@@ -308,7 +217,105 @@ describe('IpfsConnector', function () {
                     })
             });
     });
+};
+/**
+describe('IpfsConnector', function () {
+    instance = IpfsConnector.getInstance();
+    this.timeout(90000);
+    before(function (done) {
+        instance.setBinPath(binTarget);
+        rimraf(binTarget, function () {
+            done();
+        });
+    });
 
+    beforeEach(function (done) {
+        setTimeout(done, 1000);
+    });
+
+    it('should set .ipfs init folder', function () {
+        const target = path.join(binTarget, 'ipfsTest');
+        instance.setIpfsFolder(target);
+        expect(instance.options.extra.env.IPFS_PATH).to.equal(target);
+    });
+
+    it('should set a different logger', function () {
+        instance.setLogger(logger);
+        expect(instance.logger).to.deep.equal(logger);
+    });
+
+    it('should emit error when specifying bad ipfs-api address', function (done) {
+        const memAddr = instance.options.apiAddress;
+        instance.options.apiAddress = 'Qmxf09FAke';
+        instance.once(constants.events.ERROR, (message) => {
+            expect(message).to.be.defined;
+            expect(instance.serviceStatus.api).to.be.false;
+            instance.options.apiAddress = memAddr;
+            done();
+        });
+        const api = instance.api;
+        expect(api).to.be.an('object');
+    });
+
+    it('should check for binaries', function () {
+        return instance.checkExecutable();
+    });
+
+    it('should start ipfs daemon', function (done) {
+        let inited = false;
+        instance.once(constants.events.IPFS_INITING, function () {
+            inited = true;
+        });
+        instance.once(constants.events.SERVICE_STARTED, function () {
+            expect(instance.serviceStatus.process).to.be.true;
+            expect(inited).to.be.true;
+            setTimeout(done, 1000);
+        });
+        instance.start().then(function (api){
+            expect(api).to.have.ownProperty('apiClient');
+        }).catch(function(err){
+            expect(err).to.be.undefined;
+            done();
+        });
+    });
+
+    it('should get ipfs config addresses', function () {
+        expect(instance.api).to.exist;
+        return instance.getPorts().then((ports) => {
+            expect(ports.api).to.exist;
+        });
+    });
+
+    it('should set ipfs GATEWAY port', function () {
+        return instance.setPorts({gateway: 8092}).then((ports) => {
+            expect(ports).to.exist;
+        });
+    });
+
+    it('should set ipfs API port', function () {
+        return instance.setPorts({api: 5043}).then((ports) => {
+            expect(ports).to.exist;
+        });
+    });
+
+    it('should set ipfs SWARM port', function () {
+        return instance.setPorts({swarm: 4043}).then((ports) => {
+            expect(ports).to.exist;
+        });
+    });
+
+    it('restarts after setting ports', function (done) {
+        instance.once(constants.events.SERVICE_STARTED, function () {
+            expect(instance.serviceStatus.process).to.be.true;
+            setTimeout(done, 1000);
+        });
+        instance.setPorts({api: 5041, swarm: 4041, gateway: 8040}, true)
+            .then((ports) => {
+                expect(instance.options.apiAddress).to.equal('/ip4/127.0.0.1/tcp/5041');
+                expect(ports).to.exist;
+            })
+    });
+    runSharedTests();
     it('removes ipfs binary file', function (done) {
         instance.downloadManager.deleteBin().then(() => done());
     });
@@ -319,4 +326,12 @@ describe('IpfsConnector', function () {
             done();
         });
     });
+});
+*/
+describe('IpfsJsConnector', function() {
+    this.timeout(10000);
+    it('starts js instance', function(){
+        return IpfsJsConnector.getInstance().start().then((i) => instance = i);
+    });
+    runSharedTests();
 });

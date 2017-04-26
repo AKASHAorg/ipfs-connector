@@ -122,10 +122,11 @@ export class IpfsApiHelper {
     /**
      *
      * @param hash
+     * @param enc
      * @returns {any}
      */
-    public getLinks(hash: string) {
-        return this.apiClient.object.linksAsync(hash);
+    public getLinks(hash: string, enc = IpfsApiHelper.ENC_BASE58) {
+        return this.apiClient.object.linksAsync(hash, { enc: enc });
     }
 
     /**
@@ -237,12 +238,13 @@ export class IpfsApiHelper {
      * @param data
      * @param name
      * @param linkTo
-     * @returns {Bluebird<U>}
+     * @param enc
+     * @returns {PromiseLike<{size: number, hash: string}>|Promise<TResult|{size: number, hash: string}>|Bluebird<U>|PromiseLike<TResult|{size: number, hash: string}>|Thenable<U>|PromiseLike<TResult2|TResult1>|any}
      */
-    public addLinkFrom(data: any, name: string, linkTo: string) {
+    public addLinkFrom(data: any, name: string, linkTo: string, enc ?: string) {
         return this.add(data)
             .then((result: { size: number, hash: string }) => {
-                return this.addLink({ name, size: result.size, hash: result.hash }, linkTo);
+                return this.addLink({ name, size: result.size, hash: result.hash }, linkTo, enc);
             });
     }
 
@@ -250,11 +252,14 @@ export class IpfsApiHelper {
      *
      * @param link
      * @param linkTo
-     * @returns {Thenable<U>|Bluebird<R>|Promise<T>|Promise<TResult2|TResult1>|Bluebird<U>|PromiseLike<TResult>|any}
+     * @param enc
+     * @returns {PromiseLike<T>|Promise<TResult|T>|Bluebird<U>|PromiseLike<TResult|T>|Thenable<U>|PromiseLike<TResult2|TResult1>|any}
      */
-    public addLink(link: { name: string, size: number, hash: string }, linkTo: string) {
+    public addLink(link: { name: string, size: number, hash: string }, linkTo: string, enc = IpfsApiHelper.ENC_BASE58) {
         const objLink = new DAGLink(link.name, link.size, link.hash);
-        return this.apiClient.object.patch.addLinkAsync(linkTo, objLink)
-            .then((dagNode: any) => fromRawObject(dagNode));
+        return this.apiClient.object.patch.addLinkAsync(linkTo, objLink, { enc: enc })
+            .then((dagNode: any) => {
+                return fromRawObject(dagNode);
+            });
     }
 }

@@ -1,17 +1,14 @@
-import { homedir } from 'os';
-import { join as pathJoin } from 'path';
-
 export const events = {
     DOWNLOAD_STARTED: 'DOWNLOAD_STARTED',
     BINARY_CORRUPTED: 'BINARY_CORRUPTED',
     SERVICE_STARTING: 'SERVICE_STARTING',
-    SERVICE_STARTED: 'SERVICE_STARTED',
+    SERVICE_STARTED: 'start',
     SERVICE_STOPPING: 'SERVICE_STOPPING',
-    SERVICE_STOPPED: 'SERVICE_STOPPED',
+    SERVICE_STOPPED: 'stop',
     SERVICE_FAILED: 'SERVICE_FAILED',
     IPFS_INITING: 'IPFS_INITING',
-    IPFS_INIT: 'IPFS_INIT',
-    ERROR: 'ERROR'
+    IPFS_INIT: 'init',
+    ERROR: 'error'
 };
 
 export const options = {
@@ -20,7 +17,7 @@ export const options = {
     args: ['daemon'],
     executable: '',
     extra: {
-        env: Object.assign(process.env, { IPFS_PATH: pathJoin(homedir(), '.ipfs') }),
-        detached: true
+        detached: true,
+        env: { IPFS_PATH: '' }
     }
 };

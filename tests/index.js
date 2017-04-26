@@ -16,6 +16,7 @@ const file = fs.readFileSync(filePath);
 let bigObjHash = '';
 let bigObjHashLink = '';
 let rootHash = '';
+let nodeHash;
 const logger = {
     info: function () {
     },
@@ -31,6 +32,38 @@ const runSharedTests = function(){
         return instance.checkVersion().then((res) => {
             expect(res).to.exist;
         })
+    });
+    it('should get ipfs config addresses', function () {
+        expect(instance.api).to.exist;
+        return instance.getPorts().then((ports) => {
+            expect(ports.api).to.exist;
+        });
+    });
+
+    it('should set ipfs GATEWAY port', function () {
+        return instance.setPorts({gateway: 8092}).then((ports) => {
+            expect(ports).to.exist;
+        });
+    });
+
+    it('should set ipfs API port', function () {
+        return instance.setPorts({api: 5043}).then((ports) => {
+            expect(ports).to.exist;
+        });
+    });
+
+    it('should set ipfs SWARM port', function () {
+        return instance.setPorts({swarm: 4043}).then((ports) => {
+            expect(ports).to.exist;
+        });
+    });
+
+    it('restarts after setting ports', function () {
+        return instance.setPorts({api: 5041, swarm: 4041, gateway: 8040}, true)
+            .then((ports) => {
+                expect(instance.options.apiAddress).to.equal('/ip4/127.0.0.1/tcp/5041');
+                expect(ports).to.exist;
+            })
     });
 
     it('adds an object to ipfs', function () {
@@ -60,6 +93,7 @@ const runSharedTests = function(){
     it('adds buffer to ipfs', function () {
         const actual = Buffer.from(JSON.stringify({a: 1, b: 2}));
         return instance.api.add(actual).then(node => {
+            nodeHash = node.hash;
             expect(node).to.have.property('hash');
         });
     });
@@ -98,10 +132,10 @@ const runSharedTests = function(){
             })
     });
 
-    it.skip('gets hash stats', function () {
-        return instance.api.getStats('QmYftndCvcEiuSZRX7njywX2AGSeHY2ASa7VryCq1mKwEw')
+    it('gets hash stats', function () {
+        return instance.api.getStats(bigObjHash)
             .then((stats) => {
-                expect(stats.CumulativeSize).to.equal(1700);
+                expect(stats.NumLinks).to.equal(8);
             })
     });
 
@@ -115,7 +149,7 @@ const runSharedTests = function(){
 
     it('constructs object link from hash', function () {
         return instance.api
-            .addLinkFrom({coco: 1}, 'testLink', 'QmUdVKL1h4As9qKrq4aixAFGUZvsFu17twga4PBd6GzpCG')
+            .addLinkFrom({coco: 1}, 'testLink', nodeHash)
             .then((result) => {
                 expect(result.links.length).to.be.above(0);
                 return instance.api.getStats(result.multihash).then((stats) => {
@@ -135,7 +169,7 @@ const runSharedTests = function(){
 
     it('creates link to a file', function () {
         return instance.api
-            .addLinkFrom(bigObject, 'testFile', 'QmUdVKL1h4As9qKrq4aixAFGUZvsFu17twga4PBd6GzpCG')
+            .addLinkFrom(bigObject, 'testFile', bigObjHash)
             .then((result) => {
                 expect(result.links.length).to.be.above(0);
             })
@@ -169,7 +203,7 @@ const runSharedTests = function(){
 
 
     it('gets object links', function () {
-        return instance.api.getLinks('QmTymNDirRZeSjFXUUZkYHUL2TfyfMyJvG71AEPwx7yMUk')
+        return instance.api.getLinks(bigObjHash)
             .then((result) => {
                 expect(result).to.exist;
             });
@@ -218,7 +252,7 @@ const runSharedTests = function(){
             });
     });
 };
-/**
+
 describe('IpfsConnector', function () {
     instance = IpfsConnector.getInstance();
     this.timeout(90000);
@@ -279,42 +313,6 @@ describe('IpfsConnector', function () {
         });
     });
 
-    it('should get ipfs config addresses', function () {
-        expect(instance.api).to.exist;
-        return instance.getPorts().then((ports) => {
-            expect(ports.api).to.exist;
-        });
-    });
-
-    it('should set ipfs GATEWAY port', function () {
-        return instance.setPorts({gateway: 8092}).then((ports) => {
-            expect(ports).to.exist;
-        });
-    });
-
-    it('should set ipfs API port', function () {
-        return instance.setPorts({api: 5043}).then((ports) => {
-            expect(ports).to.exist;
-        });
-    });
-
-    it('should set ipfs SWARM port', function () {
-        return instance.setPorts({swarm: 4043}).then((ports) => {
-            expect(ports).to.exist;
-        });
-    });
-
-    it('restarts after setting ports', function (done) {
-        instance.once(constants.events.SERVICE_STARTED, function () {
-            expect(instance.serviceStatus.process).to.be.true;
-            setTimeout(done, 1000);
-        });
-        instance.setPorts({api: 5041, swarm: 4041, gateway: 8040}, true)
-            .then((ports) => {
-                expect(instance.options.apiAddress).to.equal('/ip4/127.0.0.1/tcp/5041');
-                expect(ports).to.exist;
-            })
-    });
     runSharedTests();
     it('removes ipfs binary file', function (done) {
         instance.downloadManager.deleteBin().then(() => done());
@@ -327,11 +325,25 @@ describe('IpfsConnector', function () {
         });
     });
 });
-*/
 describe('IpfsJsConnector', function() {
     this.timeout(10000);
+    beforeEach(function (done) {
+        setTimeout(done, 500);
+    });
+    it('should set a different logger', function () {
+        IpfsJsConnector.getInstance().setLogger(logger);
+        expect(IpfsJsConnector.getInstance().logger).to.deep.equal(logger);
+    });
+
     it('starts js instance', function(){
         return IpfsJsConnector.getInstance().start().then((i) => instance = i);
     });
     runSharedTests();
+
+    after(function (done) {
+        instance.stop();
+        rimraf((instance.getOptions()).repo, function () {
+            done();
+        });
+    });
 });

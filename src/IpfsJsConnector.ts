@@ -1,6 +1,5 @@
 import * as IPFS from 'ipfs';
 import { IpfsApiHelper } from './IpfsApiHelper';
-import * as ipfsApi from 'ipfs-api';
 import * as Promise from 'bluebird';
 
 const symbolEnforcer = Symbol();
@@ -10,12 +9,13 @@ export class IpfsJsConnector {
 
     private process: any;
     private _api: any;
-    private options = {
-      ports: {
-          API: 5042,
-          Gateway: 8042,
-          Swarm: 4042
-      },
+    public options = {
+        ports: {
+            API: 5042,
+            Gateway: 8042,
+            Swarm: 4042
+        },
+        apiAddress: '',
         repo: '0x497066734a73436f6e6e6563746f72'
     };
 
@@ -26,12 +26,20 @@ export class IpfsJsConnector {
         version: ''
     };
 
+    /**
+     *
+     * @param enforcer
+     */
     constructor(enforcer: any) {
         if (enforcer !== symbolEnforcer) {
             throw new Error('Use .getInstance() instead of constructing a new object');
         }
     }
 
+    /**
+     *
+     * @returns {any}
+     */
     public static getInstance(): IpfsJsConnector {
         if (!this[symbol]) {
             this[symbol] = new IpfsJsConnector(symbolEnforcer);
@@ -39,6 +47,10 @@ export class IpfsJsConnector {
         return this[symbol];
     }
 
+    /**
+     *
+     * @returns {any}
+     */
     get api() {
         if (!this._api) {
             let api = this.process;
@@ -59,7 +71,19 @@ export class IpfsJsConnector {
         return this._api;
     }
 
-    get config () {
+    /**
+     *
+     * @returns {{ports: {API: number, Gateway: number, Swarm: number}, repo: string}}
+     */
+    public getOptions() {
+        return this.options;
+    }
+
+    /**
+     *
+     * @returns {{repo: string, init: boolean, start: boolean, EXPERIMENTAL: {pubsub: boolean, sharding: boolean}, config: {Addresses: {API: string, Gateway: string, Swarm: [string,string]}}}}
+     */
+    get config() {
         return {
             repo: this.options.repo,
             init: true,
@@ -81,22 +105,41 @@ export class IpfsJsConnector {
         };
     }
 
+    /**
+     *
+     * @param newLogger
+     */
     public setLogger(newLogger: object) {
         this.logger = newLogger;
     }
 
-    public setConfig() {
-
+    /**
+     *
+     * @param option
+     * @param value
+     */
+    public setConfig(option: string, value: string): void {
+        if (this.options.hasOwnProperty(option)) {
+            this.options[option] = value;
+        }
     }
 
+    /**
+     *
+     * @param path
+     */
     public setIpfsFolder(path: string) {
         this.options.repo = Buffer.from(path).toString('hex');
     }
 
+    /**
+     *
+     * @returns {Bluebird}
+     */
     public start() {
         return new Promise((resolve, reject) => {
             this.process = new IPFS(this.config);
-            console.log(this.process);
+            this.options.apiAddress = this.config.config.Addresses.API;
             this.on('error', (err) => {
                 this.logger.error(err);
                 reject(err);
@@ -108,9 +151,13 @@ export class IpfsJsConnector {
         });
     }
 
+    /**
+     *
+     */
     public stop() {
         this.process.stop();
         this._api = null;
+        return true;
     }
 
     /**
@@ -123,14 +170,70 @@ export class IpfsJsConnector {
         return this.process.on(event, cb);
     }
 
+    /**
+     *
+     * @param event
+     * @param cb
+     */
+    public once(event: string, cb: (data?: any) => void) {
+        return this.process.once(event, cb);
+    }
+
+    /**
+     *
+     * @param event
+     * @param cb
+     */
+    public removeListener(event: string, cb: (data?: any) => void) {
+        return this.process.removeListener(event, cb);
+    }
+
+    /**
+     *
+     * @param event
+     * @returns {any|Cluster}
+     */
+    public removeAllListeners(event: string) {
+        return this.process.removeAllListeners(event);
+    }
+
+    /**
+     *
+     * @returns {{gateway: number, api: number, swarm: number}}
+     */
     public getPorts() {
-
+        return Promise.resolve({
+            gateway: this.options.ports.Gateway,
+            api: this.options.ports.API,
+            swarm: this.options.ports.Swarm
+        });
     }
 
-    public setPorts(ports: { gateway?: number, api?: number, swarm?: number }) {
-        this.options.ports = Object.assign({}, this.options.ports, ports);
+    /**
+     *
+     * @param ports
+     * @param restart
+     * @returns {Bluebird<{API, Gateway, Swarm}>}
+     */
+    public setPorts(ports: { gateway?: number, api?: number, swarm?: number }, restart = false) {
+        this.options.ports = Object.assign({}, this.options.ports, {Gateway: ports.gateway, API: ports.api, Swarm: ports.swarm});
+        return Promise.resolve(this.options.ports)
+            .then((ports) => {
+                if (restart) {
+                    return Promise.resolve(this.stop()).delay(1000)
+                        .then(() => {
+                            return this.start().delay(500);
+                        })
+                        .then(() => ports);
+                }
+                return ports;
+            });
     }
 
+    /**
+     *
+     * @returns {PromiseLike<boolean>|Promise<TResult|boolean>|Bluebird<boolean>|PromiseLike<TResult|boolean>|Thenable<boolean>|PromiseLike<TResult2|boolean>|any}
+     */
     public checkVersion() {
         return this.api.apiClient.versionAsync().then(
             (data: any) => {

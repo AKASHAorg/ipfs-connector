@@ -3,7 +3,15 @@ import * as Promise from 'bluebird';
 export declare class IpfsJsConnector {
     private process;
     private _api;
-    private options;
+    options: {
+        ports: {
+            API: number;
+            Gateway: number;
+            Swarm: number;
+        };
+        apiAddress: string;
+        repo: string;
+    };
     logger: any;
     serviceStatus: {
         api: boolean;
@@ -13,6 +21,15 @@ export declare class IpfsJsConnector {
     constructor(enforcer: any);
     static getInstance(): IpfsJsConnector;
     readonly api: any;
+    getOptions(): {
+        ports: {
+            API: number;
+            Gateway: number;
+            Swarm: number;
+        };
+        apiAddress: string;
+        repo: string;
+    };
     readonly config: {
         repo: string;
         init: boolean;
@@ -30,16 +47,27 @@ export declare class IpfsJsConnector {
         };
     };
     setLogger(newLogger: object): void;
-    setConfig(): void;
+    setConfig(option: string, value: string): void;
     setIpfsFolder(path: string): void;
     start(): Promise<{}>;
-    stop(): void;
+    stop(): boolean;
     on(event: string, cb: (data?: any) => void): any;
-    getPorts(): void;
+    once(event: string, cb: (data?: any) => void): any;
+    removeListener(event: string, cb: (data?: any) => void): any;
+    removeAllListeners(event: string): any;
+    getPorts(): Promise<{
+        gateway: number;
+        api: number;
+        swarm: number;
+    }>;
     setPorts(ports: {
         gateway?: number;
         api?: number;
         swarm?: number;
-    }): void;
+    }, restart?: boolean): Promise<{
+        API: number;
+        Gateway: number;
+        Swarm: number;
+    }>;
     checkVersion(): any;
 }

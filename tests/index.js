@@ -328,7 +328,7 @@ describe('IpfsConnector', function () {
 describe('IpfsJsConnector', function() {
     this.timeout(10000);
     beforeEach(function (done) {
-        setTimeout(done, 500);
+        setTimeout(done, 1000);
     });
     it('should set a different logger', function () {
         IpfsJsConnector.getInstance().setLogger(logger);

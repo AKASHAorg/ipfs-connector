@@ -34,7 +34,7 @@
     "@types/node": "7.0.13",
     "bin-wrapper": "3.0.2",
     "bluebird": "3.5.0",
-    "ipfs": "^0.23.1",
+    "ipfs": "0.23.1",
     "ipfs-api": "14.0.0",
     "is-ipfs": "0.3.0"
   },

@@ -14,8 +14,10 @@ export declare class IpfsConnector extends EventEmitter {
         args: string[];
         executable: string;
         extra: {
-            env: any;
             detached: boolean;
+            env: {
+                IPFS_PATH: string;
+            };
         };
     };
     logger: any;

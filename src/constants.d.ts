@@ -16,7 +16,9 @@ export declare const options: {
     args: string[];
     executable: string;
     extra: {
-        env: any;
         detached: boolean;
+        env: {
+            IPFS_PATH: string;
+        };
     };
 };

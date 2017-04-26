@@ -14,16 +14,16 @@ export declare class IpfsApiHelper {
     addFile(dataBuffer: Buffer): any;
     findLinks(hash: string, names: string[]): any;
     findLinkPath(start: string, path: string[]): any;
-    getLinks(hash: string): any;
+    getLinks(hash: string, enc?: string): any;
     get(objectHash: string, isFile?: boolean): any;
     getObject(objectHash: string, full?: boolean): any;
     getFile(hash: string): Promise<{}>;
     getStats(objectHash: string): any;
     updateObject(hash: string, newData: Object): any;
-    addLinkFrom(data: any, name: string, linkTo: string): any;
+    addLinkFrom(data: any, name: string, linkTo: string, enc?: string): any;
     addLink(link: {
         name: string;
         size: number;
         hash: string;
-    }, linkTo: string): any;
+    }, linkTo: string, enc?: string): any;
 }

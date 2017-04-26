@@ -1,5 +1,5 @@
 /// <reference path="../typings/main.d.ts"/>
-
+import { homedir } from 'os';
 import * as Promise from 'bluebird';
 import { IpfsBin, version as requiredVersion } from './IpfsBin';
 import { IpfsApiHelper } from './IpfsApiHelper';
@@ -10,8 +10,10 @@ import { events, options } from './constants';
 import childProcess = require('child_process');
 import path = require('path');
 
+options.extra.env = Object.assign(process.env, { IPFS_PATH: path.join(homedir(), '.ipfs') });
 const symbolEnforcer = Symbol();
 const symbol = Symbol();
+
 
 export class IpfsConnector extends EventEmitter {
     private process: childProcess.ChildProcess;

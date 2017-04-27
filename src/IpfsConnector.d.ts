@@ -35,7 +35,7 @@ export declare class IpfsConnector extends EventEmitter {
     setBinPath(path: string): void;
     setConfig(option: string, value: string): void;
     setIpfsFolder(target: string): void;
-    checkExecutable(): Promise<{}>;
+    checkExecutable(): Promise<any>;
     start(): Promise<{}>;
     private _start(binPath);
     private _attachStartingEvents();
@@ -43,10 +43,27 @@ export declare class IpfsConnector extends EventEmitter {
     private _pipeStd();
     stop(): this;
     private _init();
+    staticGetPorts(retry?: boolean): any;
+    staticSetPorts(ports: {
+        gateway?: string | number;
+        api?: string | number;
+        swarm?: string | number;
+    }, start?: boolean): Promise<{}>;
+    private _setPort(service, port, execPath);
+    rpcGetPorts(): Promise<{
+        gateway: string;
+        api: string;
+        swarm: string;
+    }>;
+    rpcSetPorts(ports: {
+        gateway?: string | number;
+        api?: string | number;
+        swarm?: string | number;
+    }, restart?: boolean): Promise<any>;
     getPorts(): Promise<{
-        gateway: number;
-        api: number;
-        swarm: number;
+        gateway: string;
+        api: string;
+        swarm: string;
     }>;
     setPorts(ports: {
         gateway?: number;

@@ -26,7 +26,7 @@ const logger = {
     }
 };
 
-const runSharedTests = function(){
+const runSharedTests = function () {
 
     it('checks ipfs version', function () {
         return instance.checkVersion().then((res) => {
@@ -262,7 +262,6 @@ describe('IpfsConnector', function () {
             done();
         });
     });
-
     beforeEach(function (done) {
         setTimeout(done, 1000);
     });
@@ -305,19 +304,37 @@ describe('IpfsConnector', function () {
             expect(inited).to.be.true;
             setTimeout(done, 1000);
         });
-        instance.start().then(function (api){
+        instance.start().then(function (api) {
             expect(api).to.have.ownProperty('apiClient');
-        }).catch(function(err){
+        }).catch(function (err) {
             expect(err).to.be.undefined;
             done();
         });
     });
 
     runSharedTests();
+
+
     it('removes ipfs binary file', function (done) {
         instance.downloadManager.deleteBin().then(() => done());
     });
 
+    it('gets ports without an api', function () {
+        instance.stop();
+        return instance.staticGetPorts().then((ports) => {
+            expect(ports.api).to.exist;
+        });
+    });
+
+    it('sets ports without an api', function () {
+        return instance.staticSetPorts({gateway: '8051', api: '5033', swarm: '4041'})
+            .then(() => {
+                return instance.staticGetPorts();
+            })
+            .then((ports) => {
+                expect(ports).to.eql({gateway: '8051', api: '5033', swarm: '4041'});
+            });
+    });
     after(function (done) {
         instance.stop();
         rimraf(binTarget, function () {
@@ -325,7 +342,7 @@ describe('IpfsConnector', function () {
         });
     });
 });
-describe('IpfsJsConnector', function() {
+describe('IpfsJsConnector', function () {
     this.timeout(10000);
     beforeEach(function (done) {
         setTimeout(done, 1000);
@@ -335,7 +352,7 @@ describe('IpfsJsConnector', function() {
         expect(IpfsJsConnector.getInstance().logger).to.deep.equal(logger);
     });
 
-    it('starts js instance', function(){
+    it('starts js instance', function () {
         return IpfsJsConnector.getInstance().start().then((i) => instance = i);
     });
     runSharedTests();

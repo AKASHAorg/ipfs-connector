@@ -13,14 +13,18 @@ import path = require('path');
 options.extra.env = Object.assign(process.env, { IPFS_PATH: path.join(homedir(), '.ipfs') });
 const symbolEnforcer = Symbol();
 const symbol = Symbol();
-
+const ROOT_OPTION = 'Addresses';
 
 export class IpfsConnector extends EventEmitter {
     private process: childProcess.ChildProcess;
     public downloadManager: IpfsBin = new IpfsBin();
     public options = options;
     public logger: any = console;
-    public serviceStatus: { api: boolean, process: boolean, version: string } = { process: false, api: false, version: '' };
+    public serviceStatus: { api: boolean, process: boolean, version: string } = {
+        process: false,
+        api: false,
+        version: ''
+    };
     private _callbacks = new Map();
     private _api: IpfsApiHelper;
 
@@ -174,7 +178,7 @@ export class IpfsConnector extends EventEmitter {
      * Default target for executable
      * @returns {Bluebird<boolean>}
      */
-    public checkExecutable(): Promise<{}> {
+    public checkExecutable(): Promise<any> {
         return new Promise((resolve, reject) => {
             this.downloadManager.check(
                 (err: Error, data: { binPath?: string, downloading?: boolean }) => {
@@ -306,7 +310,117 @@ export class IpfsConnector extends EventEmitter {
         this.process = null;
     }
 
-    public getPorts(): Promise<{ gateway: number, api: number, swarm: number }> {
+    /**
+     *
+     * @param retry
+     * @returns {Bluebird<U>}
+     */
+    public staticGetPorts(retry = false): any {
+        return this.checkExecutable()
+            .then((execPath) => {
+                return new Promise((resolve, reject) => {
+                    childProcess.exec(`${execPath} config Addresses`,
+                        { env: this.options.extra.env },
+                        (error, addresses, stderr) => {
+                            let config: {
+                                API: string,
+                                Gateway: string,
+                                Swarm: string []
+                            };
+                            if (error) {
+                                this.logger.error(error);
+                                return reject(error);
+                            }
+                            if (stderr.includes('ipfs init')) {
+                                if (!retry) {
+                                    this._init();
+                                    return resolve(Promise.delay(500).then(() => this.staticGetPorts(true)));
+                                }
+                                return reject(stderr.toString());
+                            }
+                            try {
+                                config = JSON.parse(addresses);
+                            } catch (err) {
+                                return reject(err);
+                            }
+                            options.apiAddress = config.API;
+                            return resolve({
+                                gateway: config.Gateway.split('/').pop(),
+                                api: config.API.split('/').pop(),
+                                swarm: config.Swarm[0].split('/').pop()
+                            });
+                        });
+                });
+            });
+    }
+
+    /**
+     *
+     * @param ports
+     * @param start
+     * @returns {Bluebird<U>}
+     */
+    public staticSetPorts(ports: { gateway?: string | number, api?: string | number, swarm?: string | number }, start = false) {
+        return this.checkExecutable()
+            .then((execPath) => {
+                const req = [];
+                if (ports.gateway) {
+                    req.push({ option: `${ROOT_OPTION}.Gateway`, value: `/ip4/127.0.0.1/tcp/${ports.gateway}` });
+                }
+
+                if (ports.api) {
+                    this.options.apiAddress = `/ip4/127.0.0.1/tcp/${ports.api}`;
+                    req.push({ option: `${ROOT_OPTION}.API`, value: `/ip4/127.0.0.1/tcp/${ports.api}` });
+                }
+
+                if (ports.swarm) {
+                    req.push({
+                        option: `--json ${ROOT_OPTION}.Swarm`,
+                        value: JSON.stringify([`/ip4/0.0.0.0/tcp/${ports.swarm}`, `/ip6/::/tcp/${ports.swarm}`])
+                    });
+                }
+                const reqSetOptions = Promise.each(req, (el) => {
+                    return this._setPort(el.option, el.value, execPath);
+                });
+                return reqSetOptions.then(() => {
+                    if (start) {
+                        return this.start();
+                    }
+                    return true;
+                });
+            });
+    }
+
+    /**
+     *
+     * @param service
+     * @param port
+     * @param execPath
+     * @returns {Bluebird}
+     * @private
+     */
+    private _setPort(service: string, port: string, execPath: string) {
+        return new Promise((resolve, reject) => {
+            childProcess.exec(`${execPath} config ${service} '${port}'`,
+                { env: this.options.extra.env },
+                (error, done, stderr) => {
+                    if (error) {
+                        this.logger.error(error);
+                        return reject(error);
+                    }
+                    if (stderr) {
+                        this.logger.warn(stderr);
+                    }
+                    return resolve(done);
+                });
+        });
+    }
+
+    /**
+     *
+     * @returns {Bluebird<R>|Bluebird<{gateway: T, api: T, swarm: T}>|Bluebird<U2|{gateway: T, api: T, swarm: T}>|Promise<{gateway: T, api: T, swarm: T}>|PromiseLike<{gateway: T, api: T, swarm: T}>|Promise<TResult|{gateway: T, api: T, swarm: T}>|any}
+     */
+    public rpcGetPorts(): Promise<{ gateway: string, api: string, swarm: string }> {
         return this.api.apiClient
             .config.getAsync('Addresses')
             .then((config: any) => {
@@ -318,8 +432,7 @@ export class IpfsConnector extends EventEmitter {
             });
     }
 
-
-    public setPorts(ports: { gateway?: number, api?: number, swarm?: number }, restart = false) {
+    public rpcSetPorts(ports: { gateway?: string | number, api?: string | number, swarm?: string | number }, restart = false) {
         const setup: any[] = [];
         if (ports.hasOwnProperty('gateway')) {
             setup.push(
@@ -352,6 +465,31 @@ export class IpfsConnector extends EventEmitter {
             }
             return set;
         });
+    }
+
+    /**
+     *
+     * @returns {Promise<{gateway: number, api: number, swarm: number}>}
+     */
+    public getPorts(): Promise<{ gateway: string, api: string, swarm: string }> {
+        if (this.process) {
+            return this.rpcGetPorts();
+        }
+        return this.staticGetPorts();
+    }
+
+
+    /**
+     *
+     * @param ports
+     * @param restart
+     * @returns {Bluebird<U>}
+     */
+    public setPorts(ports: { gateway?: number, api?: number, swarm?: number }, restart = false) {
+        if (this.process) {
+            return this.rpcSetPorts(ports, restart);
+        }
+        return this.staticSetPorts(ports, restart);
     }
 
     /**

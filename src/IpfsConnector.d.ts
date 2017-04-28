@@ -26,6 +26,7 @@ export declare class IpfsConnector extends EventEmitter {
         process: boolean;
         version: string;
     };
+    private _isRetry;
     private _callbacks;
     private _api;
     constructor(enforcer: any);
@@ -38,10 +39,11 @@ export declare class IpfsConnector extends EventEmitter {
     checkExecutable(): Promise<any>;
     start(): Promise<{}>;
     private _start(binPath);
+    private _cleanupFile(filePath);
     private _attachStartingEvents();
     private _flushStartingEvents();
     private _pipeStd();
-    stop(): this;
+    stop(): Promise<this>;
     private _init();
     staticGetPorts(retry?: boolean): any;
     staticSetPorts(ports: {

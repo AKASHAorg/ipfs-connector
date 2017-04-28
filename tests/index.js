@@ -320,8 +320,8 @@ describe('IpfsConnector', function () {
     });
 
     it('gets ports without an api', function () {
-        instance.stop();
-        return instance.staticGetPorts().then((ports) => {
+
+        return instance.stop().then(() => instance.staticGetPorts()).then((ports) => {
             expect(ports.api).to.exist;
         });
     });
@@ -336,9 +336,10 @@ describe('IpfsConnector', function () {
             });
     });
     after(function (done) {
-        instance.stop();
-        rimraf(binTarget, function () {
-            done();
+        instance.stop().then(() => {
+            rimraf(binTarget, function () {
+                done();
+            });
         });
     });
 });

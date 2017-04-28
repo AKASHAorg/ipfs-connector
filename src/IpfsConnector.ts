@@ -1,5 +1,6 @@
 /// <reference path="../typings/main.d.ts"/>
 import { homedir } from 'os';
+import { stat, unlink } from 'fs';
 import * as Promise from 'bluebird';
 import { IpfsBin, version as requiredVersion } from './IpfsBin';
 import { IpfsApiHelper } from './IpfsApiHelper';
@@ -14,6 +15,8 @@ options.extra.env = Object.assign(process.env, { IPFS_PATH: path.join(homedir(),
 const symbolEnforcer = Symbol();
 const symbol = Symbol();
 const ROOT_OPTION = 'Addresses';
+const LOCK_FILE = 'repo.lock';
+const API_FILE = 'api';
 
 export class IpfsConnector extends EventEmitter {
     private process: childProcess.ChildProcess;
@@ -25,6 +28,7 @@ export class IpfsConnector extends EventEmitter {
         api: false,
         version: ''
     };
+    private _isRetry = false;
     private _callbacks = new Map();
     private _api: IpfsApiHelper;
 
@@ -46,6 +50,16 @@ export class IpfsConnector extends EventEmitter {
             if (data.includes('ipfs init')) {
                 setTimeout(() => this._init(), 500);
                 return this.emit(events.IPFS_INITING);
+            }
+
+            if (data.includes('acquire lock') && !this._isRetry) {
+                return this
+                    .stop()
+                    .then(() => this._cleanupFile(path.join(this.options.extra.env.IPFS_PATH, LOCK_FILE)))
+                    .then(() => {
+                        this._isRetry = true;
+                        return this.start();
+                    })
             }
 
             this.serviceStatus.process = false;
@@ -225,12 +239,42 @@ export class IpfsConnector extends EventEmitter {
             );
             this.once(events.ERROR, reject);
             this.once(events.SERVICE_STARTED, () => {
+                this._isRetry = false;
                 this._flushStartingEvents();
                 this.removeListener(events.ERROR, reject);
                 resolve(this.api);
             });
             this._pipeStd();
             this._attachStartingEvents();
+        });
+    }
+
+    /**
+     *
+     * @param filePath
+     * @returns {Bluebird}
+     * @private
+     */
+    private _cleanupFile(filePath: string) {
+        return new Promise((resolve, reject) => {
+            return stat(filePath, (err, stats) => {
+                if (err) {
+                    if (err.code === 'ENOENT') {
+                        return resolve(true);
+                    }
+                    return reject(err);
+                }
+
+                if (stats.isFile()) {
+                    return unlink(filePath, (error) => {
+                        if (error) {
+                            return reject(error);
+                        }
+                        return resolve(true);
+                    })
+                }
+                return resolve(true);
+            })
         });
     }
 
@@ -278,8 +322,8 @@ export class IpfsConnector extends EventEmitter {
     }
 
     /**
-     * Stop ipfs daemon
-     * @returns {IpfsConnector}
+     *
+     * @returns {Bluebird<IpfsConnector>}
      */
     public stop() {
         this.emit(events.SERVICE_STOPPING);
@@ -290,10 +334,10 @@ export class IpfsConnector extends EventEmitter {
             this.process.kill();
             this.process = null;
             this.serviceStatus.process = false;
-            return this;
+            return Promise.delay(1000).then(() => this);
         }
         this.emit(events.SERVICE_STOPPED);
-        return this;
+        return Promise.delay(1000).then(() => this);
     }
 
     /**
@@ -327,8 +371,16 @@ export class IpfsConnector extends EventEmitter {
                                 Gateway: string,
                                 Swarm: string []
                             };
+                            let apiFile: string;
                             if (error) {
                                 this.logger.error(error);
+                                if (!retry) {
+                                    apiFile = path.join(this.options.extra.env.IPFS_PATH, API_FILE);
+                                    return resolve(
+                                        Promise.delay(10).then(() => this._cleanupFile(apiFile))
+                                            .then(() => this.staticGetPorts(true))
+                                    )
+                                }
                                 return reject(error);
                             }
                             if (stderr.includes('ipfs init')) {

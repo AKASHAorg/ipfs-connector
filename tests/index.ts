@@ -1,35 +1,74 @@
-"use strict";
-const {IpfsConnector, IpfsApiHelper, IpfsJsConnector} = require('../index');
-const path = require('path');
-const fs = require('fs');
-const chai = require('chai');
-const rimraf = require('rimraf');
-const statics = require('../src/statics');
-const constants = require('../src/constants');
+import {IpfsConnector} from '../index';
+import IpfsApiHelper from '@akashaproject/ipfs-connector-utils';
+import * as path from 'path';
+import * as fs from 'fs';
+import { expect } from 'chai';
+import * as rimraf from 'rimraf';
+import * as constants from '../src/constants';
+
 const bigObject = require('./stubs/bigObject.json');
-const expect = chai.expect;
-let instance;
 let binTarget = path.join(__dirname, 'bin');
 let filePath = path.join(__dirname, 'stubs', 'example.json');
-
 const file = fs.readFileSync(filePath);
-let bigObjHash = '';
-let bigObjHashLink = '';
-let rootHash = '';
-let nodeHash;
-const logger = {
-    info: function () {
-    },
-    error: function () {
-    },
-    warn: function () {
-    }
-};
 
-const runSharedTests = function () {
+let bigObjHash: any, nodeHash: any;
+
+const logger = console;
+
+
+describe('IpfsConnector', function () {
+    let instance = IpfsConnector.getInstance();
+    this.timeout(90000);
+    before(function (done) {
+        instance.setBinPath(binTarget);
+        rimraf(binTarget, function () {
+            done();
+        });
+    });
+    beforeEach(function (done) {
+        setTimeout(done, 1000);
+    });
+
+    it('prevents multiple instances', function () {
+       const newInstance = () => new IpfsConnector(Symbol());
+       expect(newInstance).to.throw(Error);
+    });
+    it('should set .ipfs init folder', function () {
+        const target = path.join(binTarget, 'ipfsTest');
+        instance.setIpfsFolder(target);
+        expect(instance.options.extra.env.IPFS_PATH).to.equal(target);
+    });
+
+    it('should set a different logger', function () {
+        instance.setLogger(logger);
+        expect(instance.logger).to.deep.equal(logger);
+    });
+
+    it('should check for binaries', function () {
+        return instance.checkExecutable();
+    });
+
+    it('should start ipfs daemon', function (done) {
+        let inited = false;
+        IpfsConnector.getInstance().once(constants.events.IPFS_INITING, function () {
+            inited = true;
+        });
+        instance.once(constants.events.SERVICE_STARTED, function () {
+            expect(instance.serviceStatus.process).to.be.true;
+            expect(inited).to.be.true;
+            setTimeout(done, 1000);
+        });
+        instance.start().then(function (api) {
+            expect(api).to.have.ownProperty('apiClient');
+        }).catch(function (err) {
+            console.log(err);
+            expect(err).to.be.undefined;
+            done();
+        });
+    });
 
     it('checks ipfs version', function () {
-        return instance.checkVersion().then((res) => {
+        return instance.checkVersion().then((res: any) => {
             expect(res).to.exist;
         })
     });
@@ -67,11 +106,11 @@ const runSharedTests = function () {
     });
 
     it('adds an object to ipfs', function () {
-        expect(instance.api).to.be.defined;
+        expect(instance.api).to.exist;
         return instance.api.add({data: '{}'})
             .then((node) => {
-                expect(node.hash).to.be.defined;
-                instance.api.get(node.hash).then((data1) => {
+                expect(node.hash).to.exist;
+                instance.api.get(node.hash).then((data1: any) => {
                     expect(data1).to.have.property('data');
                     expect(data1.data).to.equal('{}');
                 })
@@ -80,13 +119,13 @@ const runSharedTests = function () {
     it('transforms object to buffer', function () {
         const x = {a: 1};
         const expected = Buffer.from(JSON.stringify(x));
-        const actual = statics.toDataBuffer(x);
+        const actual = IpfsApiHelper.toDataBuffer(x);
         expect(actual.toString()).to.equal(expected.toString());
     });
 
     it('preserves buffer', function () {
         const initial = Buffer.from(JSON.stringify({q: 1}));
-        const actual = statics.toDataBuffer(initial);
+        const actual = IpfsApiHelper.toDataBuffer(initial);
         expect(actual.toString()).to.equal(initial.toString());
     });
 
@@ -100,7 +139,7 @@ const runSharedTests = function () {
 
     it('adds raw buffer using api.addFile', function () {
         const buf = Buffer.from(JSON.stringify({a: 1, b: 2, c: 3}));
-        return instance.api.addFile(buf).then(node => {
+        return instance.api.addFile(buf).then((node: any) => {
             expect(node).to.have.property('hash');
         });
     });
@@ -110,12 +149,12 @@ const runSharedTests = function () {
         return instance.api.add(initialObj)
             .then((node) => {
                 const patchAttr = {b: 3};
-                instance.api.updateObject(node.hash, patchAttr).then((result) => {
+                instance.api.updateObject(node.hash, patchAttr).then((result: any) => {
                     result.data = JSON.parse(result.data);
                     expect(result.data.a).to.equal(initialObj.a);
                     expect(result.data.b).to.equal(patchAttr.b);
-                    expect(result.multihash).to.be.defined;
-                    instance.api.getStats(result.multihash).then((stats) => {
+                    expect(result.multihash).to.exist;
+                    instance.api.getStats(result.multihash).then((stats: any) => {
                         expect(stats.NumLinks).to.equal(0);
                     });
                 })
@@ -126,7 +165,7 @@ const runSharedTests = function () {
         return instance.api.add(bigObject)
             .then(node => {
                 bigObjHash = node.hash;
-                instance.api.getStats(node.hash).then((stats) => {
+                instance.api.getStats(node.hash).then((stats: any) => {
                     expect(stats.NumLinks).to.be.above(0);
                 });
             })
@@ -134,7 +173,7 @@ const runSharedTests = function () {
 
     it('gets hash stats', function () {
         return instance.api.getStats(bigObjHash)
-            .then((stats) => {
+            .then((stats: any) => {
                 expect(stats.NumLinks).to.equal(8);
             })
     });
@@ -142,7 +181,7 @@ const runSharedTests = function () {
     it('reads big file', function () {
         return instance.api
             .get(bigObjHash, true)
-            .then(bigBuffer => {
+            .then((bigBuffer: any) => {
                 expect(bigBuffer.length).to.equal(Buffer.from(JSON.stringify(bigObject)).length);
             })
     });
@@ -152,7 +191,7 @@ const runSharedTests = function () {
             .addLinkFrom({coco: 1}, 'testLink', nodeHash)
             .then((result) => {
                 expect(result.links.length).to.be.above(0);
-                return instance.api.getStats(result.multihash).then((stats) => {
+                return instance.api.getStats(result.multihash).then((stats: any) => {
                     expect(stats.NumLinks).to.be.above(0);
                 });
             })
@@ -162,7 +201,7 @@ const runSharedTests = function () {
     it('adds file to ipfs', function () {
         return instance.api
             .addFile(file)
-            .then((result) => {
+            .then((result: any) => {
                 expect(result).to.exist;
             });
     });
@@ -178,7 +217,7 @@ const runSharedTests = function () {
     it('gets stats for hash', function () {
         return instance.api
             .getStats('QmRB9Mcov6eFhc1oPsbbfyYjEZKRu2ig1zhzfG3BXikcEo')
-            .then((stats) => {
+            .then((stats: any) => {
                 expect(stats).to.exist;
             });
     });
@@ -188,7 +227,7 @@ const runSharedTests = function () {
             {name: 'testLink', size: 12, multihash: 'Qmd7rTCyKW8YTtPbxDnturBPd8KPaA3SK7B2uvcScTWVNj'}];
         return instance.api
             .createNode({test: 2}, links)
-            .then((result) => {
+            .then((result: any) => {
                 expect(result).to.exist;
             })
     });
@@ -196,7 +235,7 @@ const runSharedTests = function () {
     it('gets node data', function () {
         return instance.api
             .get('QmTymNDirRZeSjFXUUZkYHUL2TfyfMyJvG71AEPwx7yMUk')
-            .then((result) => {
+            .then((result: any) => {
                 expect(result).to.have.property('test');
             })
     });
@@ -204,7 +243,7 @@ const runSharedTests = function () {
 
     it('gets object links', function () {
         return instance.api.getLinks(bigObjHash)
-            .then((result) => {
+            .then((result: any) => {
                 expect(result).to.exist;
             });
 
@@ -212,16 +251,16 @@ const runSharedTests = function () {
 
     it('gets a link by name', function () {
         return instance.api.findLinks('QmTymNDirRZeSjFXUUZkYHUL2TfyfMyJvG71AEPwx7yMUk', ['testFile'])
-            .then((dagLinks) => {
+            .then((dagLinks: any) => {
                 expect(dagLinks).to.exist;
             });
     });
 
     it('resolves link multihash', function () {
         return instance.api.findLinks('QmTymNDirRZeSjFXUUZkYHUL2TfyfMyJvG71AEPwx7yMUk', ['testLink'])
-            .then((dagLinks) => {
+            .then((dagLinks: any) => {
                 expect(dagLinks).to.exist;
-                const links = dagLinks.map((link) => {
+                const links = dagLinks.map((link: any) => {
                     return instance.api.get(link.multihash);
                 });
                 return Promise.all(links).then((data) => {
@@ -238,81 +277,19 @@ const runSharedTests = function () {
                 return instance.api.addLink(
                     {name: 'ref', hash: result.multihash, size: result.size},
                     'QmTymNDirRZeSjFXUUZkYHUL2TfyfMyJvG71AEPwx7yMUk')
-                    .then((patched) => {
+                    .then((patched: any) => {
                         expect(patched).to.exist;
                         return instance.api.findLinkPath(patched.multihash, ['ref', 'firstLink'])
-                            .then((final) => {
+                            .then((final: any) => {
                                 expect(final).to.exist;
                                 return instance.api.get(final[0].multihash)
-                                    .then((finalData) => {
+                                    .then((finalData: any) => {
                                         expect(finalData).to.have.property('test');
                                     })
                             });
                     })
             });
     });
-};
-
-describe('IpfsConnector', function () {
-    instance = IpfsConnector.getInstance();
-    this.timeout(90000);
-    before(function (done) {
-        instance.setBinPath(binTarget);
-        rimraf(binTarget, function () {
-            done();
-        });
-    });
-    beforeEach(function (done) {
-        setTimeout(done, 1000);
-    });
-
-    it('should set .ipfs init folder', function () {
-        const target = path.join(binTarget, 'ipfsTest');
-        instance.setIpfsFolder(target);
-        expect(instance.options.extra.env.IPFS_PATH).to.equal(target);
-    });
-
-    it('should set a different logger', function () {
-        instance.setLogger(logger);
-        expect(instance.logger).to.deep.equal(logger);
-    });
-
-    it('should emit error when specifying bad ipfs-api address', function (done) {
-        const memAddr = instance.options.apiAddress;
-        instance.options.apiAddress = 'Qmxf09FAke';
-        instance.once(constants.events.ERROR, (message) => {
-            expect(message).to.be.defined;
-            expect(instance.serviceStatus.api).to.be.false;
-            instance.options.apiAddress = memAddr;
-            done();
-        });
-        const api = instance.api;
-        expect(api).to.be.an('object');
-    });
-
-    it('should check for binaries', function () {
-        return instance.checkExecutable();
-    });
-
-    it('should start ipfs daemon', function (done) {
-        let inited = false;
-        instance.once(constants.events.IPFS_INITING, function () {
-            inited = true;
-        });
-        instance.once(constants.events.SERVICE_STARTED, function () {
-            expect(instance.serviceStatus.process).to.be.true;
-            expect(inited).to.be.true;
-            setTimeout(done, 1000);
-        });
-        instance.start().then(function (api) {
-            expect(api).to.have.ownProperty('apiClient');
-        }).catch(function (err) {
-            expect(err).to.be.undefined;
-            done();
-        });
-    });
-
-    runSharedTests();
 
 
     it('removes ipfs binary file', function (done) {
@@ -321,13 +298,13 @@ describe('IpfsConnector', function () {
 
     it('gets ports without an api', function () {
 
-        return instance.stop().then(() => instance.staticGetPorts()).then((ports) => {
+        return instance.stop().then(() => instance.getPorts()).then((ports) => {
             expect(ports.api).to.exist;
         });
     });
 
     it('sets ports without an api', function () {
-        return instance.staticSetPorts({gateway: '8051', api: '5033', swarm: '4041'})
+        return instance.setPorts({gateway: '8051', api: '5033', swarm: '4041'}, true)
             .then(() => {
                 return instance.staticGetPorts();
             })
@@ -335,33 +312,26 @@ describe('IpfsConnector', function () {
                 expect(ports).to.eql({gateway: '8051', api: '5033', swarm: '4041'});
             });
     });
+
+    it('doesn`t throw when calling multiple start', function () {
+       return IpfsConnector.getInstance().start().then(() => IpfsConnector.getInstance().start());
+    });
+
+    it('doesn`t throw when calling multiple stop', function () {
+        return IpfsConnector.getInstance().stop().then(() => IpfsConnector.getInstance().stop());
+    });
+
+    it('sets an option', function () {
+       IpfsConnector.getInstance().setOption('retry', false);
+       expect(IpfsConnector.getInstance().options.retry).to.be.false;
+    });
+
+
     after(function (done) {
         instance.stop().then(() => {
             rimraf(binTarget, function () {
                 done();
             });
-        });
-    });
-});
-describe('IpfsJsConnector', function () {
-    this.timeout(10000);
-    beforeEach(function (done) {
-        setTimeout(done, 1000);
-    });
-    it('should set a different logger', function () {
-        IpfsJsConnector.getInstance().setLogger(logger);
-        expect(IpfsJsConnector.getInstance().logger).to.deep.equal(logger);
-    });
-
-    it('starts js instance', function () {
-        return IpfsJsConnector.getInstance().start().then((i) => instance = i);
-    });
-    runSharedTests();
-
-    after(function (done) {
-        instance.stop();
-        rimraf((instance.getOptions()).repo, function () {
-            done();
         });
     });
 });

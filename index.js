@@ -2,10 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var IpfsConnector_1 = require("./src/IpfsConnector");
 exports.IpfsConnector = IpfsConnector_1.IpfsConnector;
-var IpfsJsConnector_1 = require("./src/IpfsJsConnector");
-exports.IpfsJsConnector = IpfsJsConnector_1.IpfsJsConnector;
-var IpfsApiHelper_1 = require("./src/IpfsApiHelper");
-exports.IpfsApiHelper = IpfsApiHelper_1.IpfsApiHelper;
 var IpfsBin_1 = require("./src/IpfsBin");
 exports.IpfsBin = IpfsBin_1.IpfsBin;
 var constants_1 = require("./src/constants");

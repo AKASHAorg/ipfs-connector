@@ -3,11 +3,12 @@
 import * as  Promise from 'bluebird';
 import { unlink } from 'fs';
 import * as path from 'path';
-import Wrapper = require('bin-wrapper');
+import * as Wrapper from 'bin-wrapper';
 
 export const version = '0.4.8';
 const base: string = `https://dist.ipfs.io/go-ipfs/v${version}/go-ipfs_v${version}_`;
 const defaultTarget = path.join(__dirname, 'bin');
+const unlinkAsync = Promise.promisify(unlink);
 
 export class IpfsBin {
     public wrapper: any;
@@ -65,7 +66,6 @@ export class IpfsBin {
      * @returns {Bluebird<T>}
      */
     deleteBin() {
-        const unlinkAsync = Promise.promisify(unlink);
         return unlinkAsync(this.getPath());
     }
 }

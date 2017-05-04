@@ -3,7 +3,7 @@
 /// <reference types="bluebird" />
 import * as Promise from 'bluebird';
 import { IpfsBin } from './IpfsBin';
-import { IpfsApiHelper } from './IpfsApiHelper';
+import IpfsApiHelper from '@akashaproject/ipfs-connector-utils';
 import { EventEmitter } from 'events';
 export declare class IpfsConnector extends EventEmitter {
     private process;
@@ -34,15 +34,21 @@ export declare class IpfsConnector extends EventEmitter {
     readonly api: IpfsApiHelper;
     setLogger(logger: {}): void;
     setBinPath(path: string): void;
-    setConfig(option: string, value: string): void;
+    setOption(option: string, value: any): void;
     setIpfsFolder(target: string): void;
     checkExecutable(): Promise<any>;
-    start(): Promise<{}>;
+    start(): Promise<any>;
     private _start(binPath);
     private _cleanupFile(filePath);
     private _attachStartingEvents();
     private _flushStartingEvents();
+    private _handleStdout(data);
+    private _handleStderr(data);
     private _pipeStd();
+    private _handleExit(code, signal);
+    private _handleError(err);
+    private _handleInit(err, stdout, stderr);
+    private _handleInitEvent(err?);
     stop(): Promise<this>;
     private _init();
     staticGetPorts(retry?: boolean): any;
@@ -50,7 +56,7 @@ export declare class IpfsConnector extends EventEmitter {
         gateway?: string | number;
         api?: string | number;
         swarm?: string | number;
-    }, start?: boolean): Promise<{}>;
+    }, start?: boolean): Promise<any>;
     private _setPort(service, port, execPath);
     rpcGetPorts(): Promise<{
         gateway: string;
@@ -68,9 +74,9 @@ export declare class IpfsConnector extends EventEmitter {
         swarm: string;
     }>;
     setPorts(ports: {
-        gateway?: number;
-        api?: number;
-        swarm?: number;
+        gateway?: string | number;
+        api?: string | number;
+        swarm?: string | number;
     }, restart?: boolean): Promise<any>;
     checkVersion(): any;
 }

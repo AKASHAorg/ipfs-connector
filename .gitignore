@@ -37,4 +37,5 @@ jspm_packages
 bin
 .idea
 docs
-src/*.js
+*.js
+*.d.ts

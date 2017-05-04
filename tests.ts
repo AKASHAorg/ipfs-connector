@@ -1,19 +1,26 @@
-import {IpfsConnector} from '../index';
+import { IpfsConnector } from './index';
 import IpfsApiHelper from '@akashaproject/ipfs-connector-utils';
 import * as path from 'path';
 import * as fs from 'fs';
 import { expect } from 'chai';
 import * as rimraf from 'rimraf';
-import * as constants from '../src/constants';
+import * as constants from './src/constants';
 
-const bigObject = require('./stubs/bigObject.json');
-let binTarget = path.join(__dirname, 'bin');
-let filePath = path.join(__dirname, 'stubs', 'example.json');
+const bigObject = require('./tests/stubs/bigObject.json');
+let binTarget = path.join(__dirname, 'tests', 'bin');
+let filePath = path.join(__dirname, 'tests', 'stubs', 'example.json');
 const file = fs.readFileSync(filePath);
 
 let bigObjHash: any, nodeHash: any;
 
-const logger = console;
+const logger = {
+    info: function () {
+    },
+    error: function () {
+    },
+    warn: function () {
+    }
+};
 
 
 describe('IpfsConnector', function () {
@@ -30,8 +37,8 @@ describe('IpfsConnector', function () {
     });
 
     it('prevents multiple instances', function () {
-       const newInstance = () => new IpfsConnector(Symbol());
-       expect(newInstance).to.throw(Error);
+        const newInstance = () => new IpfsConnector(Symbol());
+        expect(newInstance).to.throw(Error);
     });
     it('should set .ipfs init folder', function () {
         const target = path.join(binTarget, 'ipfsTest');
@@ -80,25 +87,25 @@ describe('IpfsConnector', function () {
     });
 
     it('should set ipfs GATEWAY port', function () {
-        return instance.setPorts({gateway: 8092}).then((ports) => {
+        return instance.setPorts({ gateway: 8092 }).then((ports) => {
             expect(ports).to.exist;
         });
     });
 
     it('should set ipfs API port', function () {
-        return instance.setPorts({api: 5043}).then((ports) => {
+        return instance.setPorts({ api: 5043 }).then((ports) => {
             expect(ports).to.exist;
         });
     });
 
     it('should set ipfs SWARM port', function () {
-        return instance.setPorts({swarm: 4043}).then((ports) => {
+        return instance.setPorts({ swarm: 4043 }).then((ports) => {
             expect(ports).to.exist;
         });
     });
 
     it('restarts after setting ports', function () {
-        return instance.setPorts({api: 5041, swarm: 4041, gateway: 8040}, true)
+        return instance.setPorts({ api: 5041, swarm: 4041, gateway: 8040 }, true)
             .then((ports) => {
                 expect(instance.options.apiAddress).to.equal('/ip4/127.0.0.1/tcp/5041');
                 expect(ports).to.exist;
@@ -107,7 +114,7 @@ describe('IpfsConnector', function () {
 
     it('adds an object to ipfs', function () {
         expect(instance.api).to.exist;
-        return instance.api.add({data: '{}'})
+        return instance.api.add({ data: '{}' })
             .then((node) => {
                 expect(node.hash).to.exist;
                 instance.api.get(node.hash).then((data1: any) => {
@@ -117,20 +124,20 @@ describe('IpfsConnector', function () {
             });
     });
     it('transforms object to buffer', function () {
-        const x = {a: 1};
+        const x = { a: 1 };
         const expected = Buffer.from(JSON.stringify(x));
         const actual = IpfsApiHelper.toDataBuffer(x);
         expect(actual.toString()).to.equal(expected.toString());
     });
 
     it('preserves buffer', function () {
-        const initial = Buffer.from(JSON.stringify({q: 1}));
+        const initial = Buffer.from(JSON.stringify({ q: 1 }));
         const actual = IpfsApiHelper.toDataBuffer(initial);
         expect(actual.toString()).to.equal(initial.toString());
     });
 
     it('adds buffer to ipfs', function () {
-        const actual = Buffer.from(JSON.stringify({a: 1, b: 2}));
+        const actual = Buffer.from(JSON.stringify({ a: 1, b: 2 }));
         return instance.api.add(actual).then(node => {
             nodeHash = node.hash;
             expect(node).to.have.property('hash');
@@ -138,17 +145,17 @@ describe('IpfsConnector', function () {
     });
 
     it('adds raw buffer using api.addFile', function () {
-        const buf = Buffer.from(JSON.stringify({a: 1, b: 2, c: 3}));
+        const buf = Buffer.from(JSON.stringify({ a: 1, b: 2, c: 3 }));
         return instance.api.addFile(buf).then((node: any) => {
             expect(node).to.have.property('hash');
         });
     });
 
     it('updates from existing object', function () {
-        const initialObj = {a: 1, b: 2};
+        const initialObj = { a: 1, b: 2 };
         return instance.api.add(initialObj)
             .then((node) => {
-                const patchAttr = {b: 3};
+                const patchAttr = { b: 3 };
                 instance.api.updateObject(node.hash, patchAttr).then((result: any) => {
                     result.data = JSON.parse(result.data);
                     expect(result.data.a).to.equal(initialObj.a);
@@ -188,7 +195,7 @@ describe('IpfsConnector', function () {
 
     it('constructs object link from hash', function () {
         return instance.api
-            .addLinkFrom({coco: 1}, 'testLink', nodeHash)
+            .addLinkFrom({ coco: 1 }, 'testLink', nodeHash)
             .then((result) => {
                 expect(result.links.length).to.be.above(0);
                 return instance.api.getStats(result.multihash).then((stats: any) => {
@@ -223,10 +230,10 @@ describe('IpfsConnector', function () {
     });
 
     it('creates node with links', function () {
-        const links = [{name: 'testFile', size: 12, multihash: 'QmPMH5GFmLP2oU8dK7i4iWJyX6FpgeK3gT6ZC6xLLZQ9cW'},
-            {name: 'testLink', size: 12, multihash: 'Qmd7rTCyKW8YTtPbxDnturBPd8KPaA3SK7B2uvcScTWVNj'}];
+        const links = [{ name: 'testFile', size: 12, multihash: 'QmPMH5GFmLP2oU8dK7i4iWJyX6FpgeK3gT6ZC6xLLZQ9cW' },
+            { name: 'testLink', size: 12, multihash: 'Qmd7rTCyKW8YTtPbxDnturBPd8KPaA3SK7B2uvcScTWVNj' }];
         return instance.api
-            .createNode({test: 2}, links)
+            .createNode({ test: 2 }, links)
             .then((result: any) => {
                 expect(result).to.exist;
             })
@@ -271,11 +278,11 @@ describe('IpfsConnector', function () {
 
     it('resolves a given link path', function () {
         return instance.api
-            .addLinkFrom({test: 3}, 'firstLink', 'Qmd7rTCyKW8YTtPbxDnturBPd8KPaA3SK7B2uvcScTWVNj')
+            .addLinkFrom({ test: 3 }, 'firstLink', 'Qmd7rTCyKW8YTtPbxDnturBPd8KPaA3SK7B2uvcScTWVNj')
             .then((result) => {
                 expect(result).to.exist;
                 return instance.api.addLink(
-                    {name: 'ref', hash: result.multihash, size: result.size},
+                    { name: 'ref', hash: result.multihash, size: result.size },
                     'QmTymNDirRZeSjFXUUZkYHUL2TfyfMyJvG71AEPwx7yMUk')
                     .then((patched: any) => {
                         expect(patched).to.exist;
@@ -304,17 +311,17 @@ describe('IpfsConnector', function () {
     });
 
     it('sets ports without an api', function () {
-        return instance.setPorts({gateway: '8051', api: '5033', swarm: '4041'}, true)
+        return instance.setPorts({ gateway: '8051', api: '5033', swarm: '4041' }, true)
             .then(() => {
                 return instance.staticGetPorts();
             })
             .then((ports) => {
-                expect(ports).to.eql({gateway: '8051', api: '5033', swarm: '4041'});
+                expect(ports).to.eql({ gateway: '8051', api: '5033', swarm: '4041' });
             });
     });
 
     it('doesn`t throw when calling multiple start', function () {
-       return IpfsConnector.getInstance().start().then(() => IpfsConnector.getInstance().start());
+        return IpfsConnector.getInstance().start().then(() => IpfsConnector.getInstance().start());
     });
 
     it('doesn`t throw when calling multiple stop', function () {
@@ -322,8 +329,8 @@ describe('IpfsConnector', function () {
     });
 
     it('sets an option', function () {
-       IpfsConnector.getInstance().setOption('retry', false);
-       expect(IpfsConnector.getInstance().options.retry).to.be.false;
+        IpfsConnector.getInstance().setOption('retry', false);
+        expect(IpfsConnector.getInstance().options.retry).to.be.false;
     });
 
 

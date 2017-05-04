@@ -174,7 +174,6 @@ export class IpfsConnector extends EventEmitter {
             return this.api.apiClient.versionAsync().then((data: any) => {
                 this.serviceStatus.api = true;
                 this.serviceStatus.version = data.version;
-                console.log(data);
                 this.logger.info(`Started go-ipfs version ${data.version}`);
                 return this.api;
             });

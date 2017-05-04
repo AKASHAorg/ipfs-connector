@@ -5,7 +5,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "test": "./node_modules/istanbul/lib/cli.js cover ./node_modules/.bin/_mocha  ./tests/index.js",
+    "test": "./node_modules/istanbul/lib/cli.js cover ./node_modules/.bin/_mocha  ./tests.js",
     "docs": "typedoc index.ts --out docs",
     "release": "standard-version",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls",

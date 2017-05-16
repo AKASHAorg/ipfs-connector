@@ -1,6 +1,6 @@
 {
   "name": "@akashaproject/ipfs-connector",
-  "version": "1.8.6",
+  "version": "1.8.7",
   "description": "Ipfs download/process manager",
   "main": "index.js",
   "types": "index.d.ts",

@@ -1,9 +1,9 @@
 /// <reference path="../typings/main.d.ts"/>
 
-import * as  Promise from 'bluebird';
-import { unlink } from 'fs';
-import * as path from 'path';
-import * as Wrapper from 'bin-wrapper';
+import * as  Promise from "bluebird";
+import { unlink } from "fs";
+import * as path from "path";
+import * as Wrapper from "bin-wrapper";
 
 export const version = '0.4.9';
 const base: string = `https://dist.ipfs.io/go-ipfs/v${version}/go-ipfs_v${version}_`;
@@ -66,6 +66,6 @@ export class IpfsBin {
      * @returns {Bluebird<T>}
      */
     deleteBin() {
-        return unlinkAsync(this.getPath());
+        return unlinkAsync(this.getPath()).then(() => true).catch(() => false);
     }
 }

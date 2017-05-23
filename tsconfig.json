@@ -9,6 +9,7 @@
     "declaration": true,
     "preserveConstEnums": true,
     "suppressImplicitAnyIndexErrors": true,
+    "sourceMap": true,
     "typeRoots": ["node_modules/@types"]
   },
   "exclude": [

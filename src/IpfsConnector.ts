@@ -1,12 +1,12 @@
 /// <reference path="../typings/main.d.ts"/>
-import { homedir } from 'os';
-import { stat, unlink } from 'fs';
-import * as Promise from 'bluebird';
-import { IpfsBin, version as requiredVersion } from './IpfsBin';
-import  IpfsApiHelper  from '@akashaproject/ipfs-connector-utils';
-import * as ipfsApi from 'ipfs-api';
-import { EventEmitter } from 'events';
-import { events, options } from './constants';
+import { homedir } from "os";
+import { stat, unlink } from "fs";
+import * as Promise from "bluebird";
+import { IpfsBin, version as requiredVersion } from "./IpfsBin";
+import IpfsApiHelper from "@akashaproject/ipfs-connector-utils";
+import * as ipfsApi from "ipfs-api";
+import { EventEmitter } from "events";
+import { events, options } from "./constants";
 
 import childProcess = require('child_process');
 import path = require('path');
@@ -31,6 +31,7 @@ export class IpfsConnector extends EventEmitter {
     private _isRetry = false;
     private _callbacks = new Map();
     private _api: IpfsApiHelper;
+    private _upgradeBin = true;
 
     /**
      * @param enforcer
@@ -43,7 +44,6 @@ export class IpfsConnector extends EventEmitter {
         this._callbacks.set('ipfs.stdout', (data: Buffer) => this._handleStdout(data));
         this._callbacks.set('ipfs.stderr', (data: Buffer) => this._handleStderr(data));
         this._callbacks.set('ipfs.init', (err: Error, stdout: Buffer, stderr: Buffer) => this._handleInit(err, stdout, stderr));
-        this._callbacks.set('ipfs.init.event', (err?: Error) => this._handleInitEvent(err));
     }
 
     /**
@@ -137,15 +137,23 @@ export class IpfsConnector extends EventEmitter {
      * @returns {Bluebird<boolean>}
      */
     public start() {
-
+        this.emit(events.SERVICE_STARTING);
         return this.checkExecutable().then(
             (binPath: string) => {
-                if(!binPath){
+                if (!binPath) {
                     throw new Error("Could not download ipfs executable");
                 }
                 return this._start(binPath);
             }
         );
+    }
+
+    /**
+     *
+     * @param status
+     */
+    public setAutoUpgrade(status: boolean) {
+        this._upgradeBin = status;
     }
 
     /**
@@ -156,11 +164,18 @@ export class IpfsConnector extends EventEmitter {
      */
     private _start(binPath: string) {
         return new Promise((resolve, reject) => {
-            this.process = childProcess.spawn(
-                binPath,
-                this.options.args,
-                this.options.extra
-            );
+            const runDaemon = () => {
+                this.process = childProcess.spawn(
+                    binPath,
+                    this.options.args,
+                    this.options.extra
+                );
+            };
+            const watchDaemon = () => {
+                runDaemon();
+                this._pipeStd();
+                this._attachStartingEvents();
+            };
             this.once(events.ERROR, reject);
             this.once(events.SERVICE_STARTED, () => {
                 this._isRetry = false;
@@ -168,13 +183,14 @@ export class IpfsConnector extends EventEmitter {
                 this.removeListener(events.ERROR, reject);
                 resolve();
             });
-            this._pipeStd();
-            this._attachStartingEvents();
+            this.once(events.IPFS_INIT, () => {
+                watchDaemon();
+            });
+
+            watchDaemon();
         }).then(() => {
-            return this.api.apiClient.versionAsync().then((data: any) => {
-                this.serviceStatus.api = true;
-                this.serviceStatus.version = data.version;
-                this.logger.info(`Started go-ipfs version ${data.version}`);
+            return this.checkVersion().then(() => {
+                this.logger.info(`Started go-ipfs version ${this.serviceStatus.version}`);
                 return this.api;
             });
         });
@@ -216,7 +232,6 @@ export class IpfsConnector extends EventEmitter {
     private _attachStartingEvents() {
         this.process.stderr.on('data', this._callbacks.get('ipfs.stderr'));
         this.process.stdout.on('data', this._callbacks.get('ipfs.stdout'));
-        this.on(events.IPFS_INIT, this._callbacks.get('ipfs.init.event'));
     }
 
     /**
@@ -226,7 +241,6 @@ export class IpfsConnector extends EventEmitter {
     private _flushStartingEvents() {
         this.process.stderr.removeListener('data', this._callbacks.get('ipfs.stderr'));
         this.process.stdout.removeListener('data', this._callbacks.get('ipfs.stdout'));
-        this.removeListener(events.IPFS_INIT, this._callbacks.get('ipfs.init.event'));
     }
 
     /**
@@ -362,17 +376,6 @@ export class IpfsConnector extends EventEmitter {
 
     /**
      *
-     * @param err
-     * @private
-     */
-    private _handleInitEvent(err?: Error) {
-        if (!err) {
-            this.start();
-        }
-    }
-
-    /**
-     *
      * @returns {Bluebird<IpfsConnector>}
      */
     public stop() {
@@ -395,12 +398,16 @@ export class IpfsConnector extends EventEmitter {
      * @private
      */
     private _init() {
+
         let init = childProcess.exec(
             `"${this.downloadManager.wrapper.path()}" init`,
             { env: this.options.extra.env },
             this._callbacks.get('ipfs.init')
         );
         this.options.retry = false;
+        if (this.process) {
+            this._flushStartingEvents();
+        }
         this.process = null;
     }
 
@@ -601,13 +608,26 @@ export class IpfsConnector extends EventEmitter {
     }
 
     /**
-     * @returns {PromiseLike<TResult|boolean>|Bluebird<boolean>|Promise<TResult|boolean>|Promise<boolean>|Bluebird<R>|Promise<TResult2|boolean>|any}
+     *
+     * @returns {Thenable<IpfsApiHelper>|Bluebird<IpfsApiHelper>|PromiseLike<TResult2|IpfsApiHelper>|Bluebird<R>|Bluebird<U2|IpfsApiHelper>|Promise<TResult2|IpfsApiHelper>}
      */
     public checkVersion() {
         return this.api.apiClient.versionAsync().then(
             (data: any) => {
+                this.serviceStatus.api = true;
                 this.serviceStatus.version = data.version;
-                return data.version === requiredVersion;
+                if (data.version === requiredVersion || !this._upgradeBin) {
+                    return this.api;
+                }
+
+                this.emit(events.UPGRADING_BINARY);
+                return this.stop().delay(5000).then(() => {
+                    return this.downloadManager
+                        .deleteBin()
+                        .delay(1000)
+                        .then(() => IpfsConnector.getInstance().start())
+                        .then(() => this.api);
+                });
             }
         );
     }

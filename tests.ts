@@ -33,7 +33,7 @@ describe('IpfsConnector', function () {
         });
     });
     beforeEach(function (done) {
-        setTimeout(done, 1000);
+        setTimeout(done, 2500);
     });
 
     it('prevents multiple instances', function () {
@@ -55,22 +55,14 @@ describe('IpfsConnector', function () {
         return instance.checkExecutable();
     });
 
-    it('should start ipfs daemon', function (done) {
+    it('should start ipfs daemon', function () {
         let inited = false;
         IpfsConnector.getInstance().once(constants.events.IPFS_INITING, function () {
             inited = true;
         });
-        instance.once(constants.events.SERVICE_STARTED, function () {
-            expect(instance.serviceStatus.process).to.be.true;
-            expect(inited).to.be.true;
-            setTimeout(done, 1000);
-        });
-        instance.start().then(function (api) {
+        return instance.start().then(function (api) {
             expect(api).to.have.ownProperty('apiClient');
-        }).catch(function (err) {
-            console.log(err);
-            expect(err).to.be.undefined;
-            done();
+            expect(inited).to.be.true;
         });
     });
 
@@ -299,19 +291,15 @@ describe('IpfsConnector', function () {
     });
 
 
-    it('removes ipfs binary file', function (done) {
-        instance.downloadManager.deleteBin().then(() => done());
-    });
 
     it('gets ports without an api', function () {
-
         return instance.stop().then(() => instance.getPorts()).then((ports) => {
             expect(ports.api).to.exist;
         });
     });
 
     it('sets ports without an api', function () {
-        return instance.setPorts({ gateway: '8051', api: '5033', swarm: '4041' }, true)
+        return instance.setPorts({ gateway: '8051', api: '5033', swarm: '4041' })
             .then(() => {
                 return instance.staticGetPorts();
             })
@@ -331,6 +319,10 @@ describe('IpfsConnector', function () {
     it('sets an option', function () {
         IpfsConnector.getInstance().setOption('retry', false);
         expect(IpfsConnector.getInstance().options.retry).to.be.false;
+    });
+
+    it('removes ipfs binary file', function (done) {
+        instance.downloadManager.deleteBin().then(() => done());
     });
 
 

@@ -40,3 +40,4 @@ docs
 *.js
 *.d.ts
 !typings/main.d.ts
+*.map

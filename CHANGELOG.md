@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.9.0"></a>
+# [1.9.0](https://github.com/AkashaProject/ipfs-connector/compare/v1.8.7...v1.9.0) (2017-05-23)
+
+
+### Features
+
+* **binary:** add auto upgrade logic ([df92463](https://github.com/AkashaProject/ipfs-connector/commit/df92463))
+
+
+
 <a name="1.8.7"></a>
 ## [1.8.7](https://github.com/AkashaProject/ipfs-connector/compare/v1.8.6...v1.8.7) (2017-05-16)
 

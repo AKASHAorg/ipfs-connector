@@ -143,6 +143,9 @@ export class IpfsConnector extends EventEmitter {
                 if (!binPath) {
                     throw new Error("Could not download ipfs executable");
                 }
+                if (this._api) {
+                    this._api = null;
+                }
                 return this._start(binPath);
             }
         );

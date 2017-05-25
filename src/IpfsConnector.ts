@@ -1,12 +1,12 @@
 /// <reference path="../typings/main.d.ts"/>
-import { homedir } from "os";
-import { stat, unlink } from "fs";
-import * as Promise from "bluebird";
-import { IpfsBin, version as requiredVersion } from "./IpfsBin";
-import IpfsApiHelper from "@akashaproject/ipfs-connector-utils";
-import * as ipfsApi from "ipfs-api";
-import { EventEmitter } from "events";
-import { events, options } from "./constants";
+import { homedir } from 'os';
+import { stat, unlink } from 'fs';
+import * as Promise from 'bluebird';
+import { IpfsBin, version as requiredVersion } from './IpfsBin';
+import IpfsApiHelper from '@akashaproject/ipfs-connector-utils';
+import * as ipfsApi from 'ipfs-api';
+import { EventEmitter } from 'events';
+import { events, options } from './constants';
 
 import childProcess = require('child_process');
 import path = require('path');
@@ -141,7 +141,7 @@ export class IpfsConnector extends EventEmitter {
         return this.checkExecutable().then(
             (binPath: string) => {
                 if (!binPath) {
-                    throw new Error("Could not download ipfs executable");
+                    throw new Error('Could not download ipfs executable');
                 }
                 if (this._api) {
                     this._api = null;
@@ -221,10 +221,10 @@ export class IpfsConnector extends EventEmitter {
                             return reject(error);
                         }
                         return resolve(true);
-                    })
+                    });
                 }
                 return resolve(true);
-            })
+            });
         });
     }
 
@@ -296,7 +296,7 @@ export class IpfsConnector extends EventEmitter {
                 .then(() => {
                     this._isRetry = true;
                     return this.start();
-                })
+                });
         }
 
         this.serviceStatus.process = false;
@@ -390,6 +390,7 @@ export class IpfsConnector extends EventEmitter {
             this.process.kill();
             this.process = null;
             this.serviceStatus.process = false;
+            this.serviceStatus.version = '';
             return Promise.delay(1000).then(() => this);
         }
         this.emit(events.SERVICE_STOPPED);
@@ -439,7 +440,7 @@ export class IpfsConnector extends EventEmitter {
                                     return resolve(
                                         Promise.delay(10).then(() => this._cleanupFile(apiFile))
                                             .then(() => this.staticGetPorts(true))
-                                    )
+                                    );
                                 }
                                 return reject(error);
                             }

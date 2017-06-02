@@ -97,6 +97,38 @@ export class IpfsConnector extends EventEmitter {
     /**
      * Set a daemon config value. The daemon has to be stopped.
      * @param config
+     */
+    public staticGetConfig(config: string) {
+        this.checkExecutable()
+          .then((execPath) => {
+              return new Promise((resolve, reject) => {
+                  if (this.process) {
+                      return reject('Daemon already started');
+                  }
+                  childProcess.exec(`${execPath} config ${config}`,
+                    { env: this.options.extra.env },
+                    (error, value, stderr) => {
+                        if (error) {
+                            this.logger.error(error);
+                            return reject(error);
+                        }
+                        if (stderr) {
+                            this.logger.warn(stderr);
+                            return reject(stderr.toString())
+                        }
+                        try {
+                            return resolve(JSON.parse(value));
+                        } catch (err) {
+                            return reject(err);
+                        }
+                    });
+              });
+          });
+    }
+
+    /**
+     * Set a daemon config value. The daemon has to be stopped.
+     * @param config
      * @param value
      */
     public staticSetConfig(config: string, value: string) {

@@ -99,7 +99,7 @@ export class IpfsConnector extends EventEmitter {
      * @param config
      */
     public staticGetConfig(config: string) {
-        this.checkExecutable()
+        return this.checkExecutable()
           .then((execPath) => {
               return new Promise((resolve, reject) => {
                   if (this.process) {
@@ -114,7 +114,7 @@ export class IpfsConnector extends EventEmitter {
                         }
                         if (stderr) {
                             this.logger.warn(stderr);
-                            return reject(stderr.toString())
+                            return reject(stderr.toString());
                         }
                         try {
                             return resolve(JSON.parse(value));
@@ -132,7 +132,7 @@ export class IpfsConnector extends EventEmitter {
      * @param value
      */
     public staticSetConfig(config: string, value: string) {
-        this.checkExecutable()
+        return this.checkExecutable()
           .then((execPath) => {
               return new Promise((resolve, reject) => {
                   if (this.process) {

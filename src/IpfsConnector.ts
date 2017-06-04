@@ -483,7 +483,6 @@ export class IpfsConnector extends EventEmitter {
         this.options.retry = true;
         this.serviceStatus.api = false;
         if (this.process) {
-            console.log('killing process');
             this.process.kill();
             return new Promise((resolve) => {
                 this.process.once('exit', () => {
@@ -491,12 +490,10 @@ export class IpfsConnector extends EventEmitter {
                     this.serviceStatus.process = false;
                     this.serviceStatus.version = '';
                     this._state = ConnectorState.STOPPED;
-                    console.log('killing process resolved');
                     resolve(this);
                 });
             }).timeout(10000);
         }
-        console.log('NOT killing process');
         this.emit(events.SERVICE_STOPPED);
         return Promise.resolve(this);
     }

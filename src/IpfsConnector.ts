@@ -18,6 +18,13 @@ const ROOT_OPTION = 'Addresses';
 const LOCK_FILE = 'repo.lock';
 const API_FILE = 'api';
 
+enum ConnectorState {
+    STOPPED,
+    STARTING,
+    STARTED,
+    STOPPING
+}
+
 export class IpfsConnector extends EventEmitter {
     private process: childProcess.ChildProcess;
     public downloadManager: IpfsBin = new IpfsBin();
@@ -32,6 +39,8 @@ export class IpfsConnector extends EventEmitter {
     private _callbacks = new Map();
     private _api: IpfsApiHelper;
     private _upgradeBin = true;
+    private _state = ConnectorState.STOPPED;
+
 
     /**
      * @param enforcer
@@ -102,8 +111,8 @@ export class IpfsConnector extends EventEmitter {
         return this.checkExecutable()
           .then((execPath) => {
               return new Promise((resolve, reject) => {
-                  if (this.process) {
-                      return reject('Daemon already started');
+                  if (this._state !== ConnectorState.STOPPED) {
+                      return reject('The daemon need to be stopped');
                   }
                   childProcess.exec(`${execPath} config ${config}`,
                     { env: this.options.extra.env },
@@ -135,8 +144,8 @@ export class IpfsConnector extends EventEmitter {
         return this.checkExecutable()
           .then((execPath) => {
               return new Promise((resolve, reject) => {
-                  if (this.process) {
-                      return reject('Daemon already started');
+                  if (this._state !== ConnectorState.STOPPED) {
+                      return reject('The daemon need to be stopped');
                   }
                   childProcess.exec(`${execPath} config ${config} ${value}`,
                     { env: this.options.extra.env },
@@ -197,7 +206,17 @@ export class IpfsConnector extends EventEmitter {
      * @returns {Bluebird<boolean>}
      */
     public start() {
+        if (this._state === ConnectorState.STARTING) {
+            return new Promise((resolve) => this.on(events.SERVICE_STARTED, () => resolve()));
+        }
+        if (this._state === ConnectorState.STARTED) {
+            return Promise.resolve(this.api);
+        }
+        if (this._state === ConnectorState.STOPPING) {
+            return Promise.reject('You can\'t start the daemon while stopping it.');
+        }
         this.emit(events.SERVICE_STARTING);
+        this._state = ConnectorState.STARTING;
         return this.checkExecutable().then(
             (binPath: string) => {
                 if (!binPath) {
@@ -239,7 +258,10 @@ export class IpfsConnector extends EventEmitter {
                 this._pipeStd();
                 this._attachStartingEvents();
             };
-            this.once(events.ERROR, reject);
+            this.once(events.ERROR, (error: string) => {
+                this._state = ConnectorState.STOPPED;
+                reject(error);
+            });
             this.once(events.SERVICE_STARTED, () => {
                 this._isRetry = false;
                 this._flushStartingEvents();
@@ -254,6 +276,7 @@ export class IpfsConnector extends EventEmitter {
         }).then(() => {
             return this.checkVersion().then(() => {
                 this.logger.info(`Started go-ipfs version ${this.serviceStatus.version}`);
+                this._state = ConnectorState.STARTED;
                 return this.api;
             });
         });
@@ -364,6 +387,7 @@ export class IpfsConnector extends EventEmitter {
          * @event IpfsConnector#SERVICE_FAILED
          */
         return this.emit(events.SERVICE_FAILED, data);
+        // TODO: maybe set the state to ConnectorState.STOPPED ?
     }
 
     /**
@@ -398,6 +422,7 @@ export class IpfsConnector extends EventEmitter {
     private _handleExit(code: number, signal: string) {
         this.serviceStatus.process = false;
         this.logger.info(`ipfs exited with code: ${code}, signal: ${signal} `);
+        this._state = ConnectorState.STOPPED;
         this.emit(events.SERVICE_STOPPED);
     }
 
@@ -442,19 +467,38 @@ export class IpfsConnector extends EventEmitter {
      * @returns {Bluebird<IpfsConnector>}
      */
     public stop() {
+        if (this._state === ConnectorState.STOPPED) {
+            return Promise.resolve(this);
+        }
+        if (this._state === ConnectorState.STARTING) {
+            return Promise.reject('You can\'t stop the daemon while starting it.');
+        }
+        if (this._state === ConnectorState.STOPPING) {
+            return new Promise((resolve) => this.on(events.SERVICE_STOPPED, () => resolve()));
+        }
+
         this.emit(events.SERVICE_STOPPING);
+        this._state = ConnectorState.STOPPING;
         this._api = null;
         this.options.retry = true;
         this.serviceStatus.api = false;
         if (this.process) {
+            console.log('killing process');
             this.process.kill();
-            this.process = null;
-            this.serviceStatus.process = false;
-            this.serviceStatus.version = '';
-            return Promise.delay(1000).then(() => this);
+            return new Promise((resolve) => {
+                this.process.once('exit', () => {
+                    this.process = null;
+                    this.serviceStatus.process = false;
+                    this.serviceStatus.version = '';
+                    this._state = ConnectorState.STOPPED;
+                    console.log('killing process resolved');
+                    resolve(this);
+                });
+            }).timeout(10000);
         }
+        console.log('NOT killing process');
         this.emit(events.SERVICE_STOPPED);
-        return Promise.delay(1000).then(() => this);
+        return Promise.resolve(this);
     }
 
     /**

@@ -308,6 +308,16 @@ describe('IpfsConnector', function () {
             });
     });
 
+    it('sets and get config without an api', function () {
+        return instance.staticSetConfig('Config.That.Does.Not.Exist', 'expectedValue')
+          .then(() => {
+              return instance.staticGetConfig('Config.That.Does.Not.Exist');
+          })
+          .then((value) => {
+              expect(value).to.eql('expectedValue');
+          });
+    });
+
     it('doesn`t throw when calling multiple start', function () {
         return IpfsConnector.getInstance().start().then(() => IpfsConnector.getInstance().start());
     });

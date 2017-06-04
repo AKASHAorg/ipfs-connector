@@ -126,7 +126,7 @@ export class IpfsConnector extends EventEmitter {
                             return reject(stderr.toString());
                         }
                         try {
-                            return resolve(JSON.parse(value));
+                            return resolve(value.trim());
                         } catch (err) {
                             return reject(err);
                         }

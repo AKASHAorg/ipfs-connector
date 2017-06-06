@@ -109,30 +109,31 @@ export class IpfsConnector extends EventEmitter {
      */
     public staticGetConfig(config: string) {
         return this.checkExecutable()
-          .then((execPath) => {
-              return new Promise((resolve, reject) => {
-                  if (this._state !== ConnectorState.STOPPED) {
-                      return reject('The daemon need to be stopped');
-                  }
-                  childProcess.exec(`${execPath} config ${config}`,
-                    { env: this.options.extra.env },
-                    (error, value, stderr) => {
-                        if (error) {
-                            this.logger.error(error);
-                            return reject(error);
-                        }
-                        if (stderr) {
-                            this.logger.warn(stderr);
-                            return reject(stderr.toString());
-                        }
-                        try {
-                            return resolve(value.trim());
-                        } catch (err) {
-                            return reject(err);
-                        }
-                    });
-              });
-          });
+            .then((execPath) => {
+                return new Promise((resolve, reject) => {
+                    if (this._state !== ConnectorState.STOPPED) {
+                        return reject('The daemon need to be stopped');
+                    }
+                    childProcess.exec(`${execPath} config ${config}`,
+                        { env: this.options.extra.env },
+                        (error, value, stderr) => {
+                            if (error) {
+                                this.logger.error(error);
+                                return reject(error);
+                            }
+                            if (stderr) {
+                                this.logger.warn(stderr);
+                                return reject(stderr.toString());
+                            }
+                            try {
+                                return resolve(value.trim());
+                            } catch (err) {
+                                this.logger.error(err);
+                                return reject(err);
+                            }
+                        });
+                });
+            });
     }
 
     /**
@@ -142,25 +143,25 @@ export class IpfsConnector extends EventEmitter {
      */
     public staticSetConfig(config: string, value: string) {
         return this.checkExecutable()
-          .then((execPath) => {
-              return new Promise((resolve, reject) => {
-                  if (this._state !== ConnectorState.STOPPED) {
-                      return reject('The daemon need to be stopped');
-                  }
-                  childProcess.exec(`${execPath} config ${config} ${value}`,
-                    { env: this.options.extra.env },
-                    (error, done, stderr) => {
-                        if (error) {
-                            this.logger.error(error);
-                            return reject(error);
-                        }
-                        if (stderr) {
-                            this.logger.warn(stderr);
-                        }
-                        return resolve(done);
-                    });
-              });
-          });
+            .then((execPath) => {
+                return new Promise((resolve, reject) => {
+                    if (this._state !== ConnectorState.STOPPED) {
+                        return reject('The daemon need to be stopped');
+                    }
+                    childProcess.exec(`${execPath} config ${config} ${value}`,
+                        { env: this.options.extra.env },
+                        (error, done, stderr) => {
+                            if (error) {
+                                this.logger.error(error);
+                                return reject(error);
+                            }
+                            if (stderr) {
+                                this.logger.warn(stderr);
+                            }
+                            return resolve(done);
+                        });
+                });
+            });
     }
 
     /**

@@ -746,18 +746,27 @@ export class IpfsConnector extends EventEmitter {
         return this.checkExecutable()
             .then((execPath) => {
                 return new Promise((resolve, reject) => {
-                    childProcess.exec(`${execPath} ${args}`,
-                      {env: this.options.extra.env},
-                      (error, stdout, stderr) => {
-                          if (error) {
-                              this.logger.error(error);
-                              return reject(error);
-                          }
-                          if (stderr) {
-                              this.logger.warn(stderr);
-                          }
-                          return resolve(stdout);
-                      });
+                    let stdout = '';
+                    let stderr = '';
+                    const command = childProcess.spawn(execPath, [args],
+                      {env: this.options.extra.env}
+                    );
+                    command.stdout.on('data', (data) => {
+                        stdout += data;
+                    });
+                    command.stderr.on('data', (data) => {
+                        stderr += data;
+                    });
+                    command.on('close', (code) => {
+                        if (code !== 0) {
+                            this.logger.error(stderr);
+                            return reject(stderr);
+                        }
+                        if (stderr) {
+                            this.logger.warn(stderr);
+                        }
+                        return resolve(stdout);
+                    });
                 });
             });
     }

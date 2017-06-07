@@ -322,6 +322,19 @@ describe('IpfsConnector', function () {
         return instance.runCommand('id')
           .then((stdout: string) => {
               expect(stdout).to.exist;
+          })
+          .catch(() => {
+            throw new Error('Should not fail');
+          });
+    });
+
+    it('fail running a raw cli commands properly', function () {
+        return instance.runCommand('doesnotexist')
+          .then(() => {
+              throw new Error('Should not succed');
+          })
+          .catch((stderr: string) => {
+              expect(stderr).to.exist;
           });
     });
 

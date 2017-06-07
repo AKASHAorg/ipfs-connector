@@ -318,6 +318,13 @@ describe('IpfsConnector', function () {
           });
     });
 
+    it('run raw cli commands', function () {
+        return instance.runCommand('id')
+          .then((stdout: string) => {
+              expect(stdout).to.exist;
+          });
+    });
+
     it('doesn`t throw when calling multiple start', function () {
         return IpfsConnector.getInstance().start().then(() => IpfsConnector.getInstance().start());
     });
@@ -334,7 +341,6 @@ describe('IpfsConnector', function () {
     it('removes ipfs binary file', function (done) {
         instance.downloadManager.deleteBin().then(() => done());
     });
-
 
     after(function (done) {
         instance.stop().then(() => {

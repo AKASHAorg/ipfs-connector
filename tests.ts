@@ -318,6 +318,26 @@ describe('IpfsConnector', function () {
           });
     });
 
+    it('run raw cli commands', function () {
+        return instance.runCommand('id')
+          .then((stdout: string) => {
+              expect(stdout).to.exist;
+          })
+          .catch(() => {
+            throw new Error('Should not fail');
+          });
+    });
+
+    it('fail running a raw cli commands properly', function () {
+        return instance.runCommand('doesnotexist')
+          .then(() => {
+              throw new Error('Should not succed');
+          })
+          .catch((stderr: string) => {
+              expect(stderr).to.exist;
+          });
+    });
+
     it('doesn`t throw when calling multiple start', function () {
         return IpfsConnector.getInstance().start().then(() => IpfsConnector.getInstance().start());
     });
@@ -334,7 +354,6 @@ describe('IpfsConnector', function () {
     it('removes ipfs binary file', function (done) {
         instance.downloadManager.deleteBin().then(() => done());
     });
-
 
     after(function (done) {
         instance.stop().then(() => {

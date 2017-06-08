@@ -699,7 +699,6 @@ export class IpfsConnector extends EventEmitter {
         return this.staticGetPorts();
     }
 
-
     /**
      *
      * @param ports
@@ -736,5 +735,39 @@ export class IpfsConnector extends EventEmitter {
                 });
             }
         );
+    }
+
+    /**
+     * Run a raw command through the command line on the local daemon.
+     * @param args
+     * @returns {Bluebird<U>}
+     */
+    public runCommand(args: string) {
+        return this.checkExecutable()
+            .then((execPath) => {
+                return new Promise((resolve, reject) => {
+                    let stdout = '';
+                    let stderr = '';
+                    const command = childProcess.spawn(execPath, [args],
+                      {env: this.options.extra.env}
+                    );
+                    command.stdout.on('data', (data) => {
+                        stdout += data;
+                    });
+                    command.stderr.on('data', (data) => {
+                        stderr += data;
+                    });
+                    command.on('close', (code) => {
+                        if (code !== 0) {
+                            this.logger.error(stderr);
+                            return reject(stderr);
+                        }
+                        if (stderr) {
+                            this.logger.warn(stderr);
+                        }
+                        return resolve(stdout);
+                    });
+                });
+            });
     }
 }

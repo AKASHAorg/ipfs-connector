@@ -9,6 +9,7 @@ export const events = {
     SERVICE_FAILED: 'SERVICE_FAILED',
     IPFS_INITING: 'IPFS_INITING',
     IPFS_INIT: 'init',
+    STATUS_UPDATE: 'STATUS_UPDATE',
     ERROR: 'error'
 };
 

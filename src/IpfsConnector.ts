@@ -210,7 +210,7 @@ export class IpfsConnector extends EventEmitter {
 
                     if (data.binPath) {
                         if (this.serviceStatus.state === ConnectorState.UNKNOW ||
-                          this.serviceStatus.state === ConnectorState.DOWNLOADING) {
+                            this.serviceStatus.state === ConnectorState.DOWNLOADING) {
                             this._setState(ConnectorState.STOPPED);
                         }
                         return resolve(data.binPath);
@@ -753,7 +753,9 @@ export class IpfsConnector extends EventEmitter {
                 return this.stop().delay(5000).then(() => {
                     return this.downloadManager
                         .deleteBin()
-                        .then(() => { this._setState(ConnectorState.NO_BINARY); })
+                        .then(() => {
+                            this._setState(ConnectorState.NO_BINARY);
+                        })
                         .delay(1000)
                         .then(() => IpfsConnector.getInstance().start())
                         .then(() => this.api);
@@ -774,7 +776,7 @@ export class IpfsConnector extends EventEmitter {
                     let stdout = '';
                     let stderr = '';
                     const command = childProcess.spawn(execPath, [args],
-                      {env: this.options.extra.env}
+                        { env: this.options.extra.env }
                     );
                     command.stdout.on('data', (data) => {
                         stdout += data;

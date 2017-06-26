@@ -30,16 +30,16 @@
     "url": "https://github.com/AkashaProject/ipfs-connector/issues"
   },
   "dependencies": {
-    "@akashaproject/ipfs-connector-utils": "1.0.1",
-    "@types/bluebird": "3.5.5",
-    "@types/node": "7.0.31",
+    "@akashaproject/ipfs-connector-utils": "1.0.2",
+    "@types/bluebird": "3.5.8",
+    "@types/node": "8.0.3",
     "bin-wrapper": "3.0.2",
     "bluebird": "3.5.0",
-    "ipfs-api": "14.0.3",
+    "ipfs-api": "14.0.4",
     "is-ipfs": "0.3.0"
   },
   "devDependencies": {
-    "@types/chai": "4.0.0",
+    "@types/chai": "4.0.1",
     "@types/mocha": "2.2.41",
     "@types/rimraf": "0.0.28",
     "chai": "4.0.2",

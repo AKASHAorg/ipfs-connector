@@ -435,6 +435,7 @@ export class IpfsConnector extends EventEmitter {
                 this.process.stdout.removeListener('data', logInfo);
                 this.process.removeListener('exit', (code: number, signal: string) => this._handleExit(code, signal));
                 this.process.removeListener('error', (err: Error) => this._handleError(err));
+                this.process = null;
             }
         });
     }
@@ -446,6 +447,8 @@ export class IpfsConnector extends EventEmitter {
      * @private
      */
     private _handleExit(code: number, signal: string) {
+        this.serviceStatus.process = false;
+        this.serviceStatus.version = '';
         this.serviceStatus.process = false;
         this.logger.info(`ipfs exited with code: ${code}, signal: ${signal} `);
         this._setState(ConnectorState.STOPPED);
@@ -508,19 +511,19 @@ export class IpfsConnector extends EventEmitter {
         this.options.retry = true;
         this.serviceStatus.api = false;
         if (this.process) {
-            this.process.kill();
-            return new Promise((resolve) => {
-                this.process.once('exit', () => {
-                    this.process = null;
-                    this.serviceStatus.process = false;
-                    this.serviceStatus.version = '';
-                    this._setState(ConnectorState.STOPPED);
-                    resolve(this);
-                });
-            }).timeout(10000);
+            return this._shutDown().delay(1000).then(() => this);
         }
-        this.emit(events.SERVICE_STOPPED);
         return Promise.resolve(this);
+    }
+
+    private _shutDown() {
+        return Promise.fromCallback((cb) => {
+            return childProcess.exec(
+                `"${this.downloadManager.wrapper.path()}" shutdown`,
+                { env: this.options.extra.env },
+                cb
+            );
+        });
     }
 
     /**

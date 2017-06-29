@@ -8,7 +8,6 @@ import * as Wrapper from 'bin-wrapper';
 export const version = '0.4.10';
 const base: string = `https://dist.ipfs.io/go-ipfs/v${version}/go-ipfs_v${version}_`;
 const defaultTarget = path.join(__dirname, 'bin');
-const unlinkAsync = Promise.promisify(unlink);
 
 export class IpfsBin {
     public wrapper: any;
@@ -66,6 +65,8 @@ export class IpfsBin {
      * @returns {Bluebird<T>}
      */
     deleteBin() {
-        return unlinkAsync(this.getPath()).then(() => true).catch(() => false);
+        return Promise.fromCallback((cb) => {
+            return unlink(this.getPath(), cb);
+        }).then(() => true).catch(() => false);
     }
 }

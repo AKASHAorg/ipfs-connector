@@ -131,7 +131,7 @@ export class IpfsConnector extends EventEmitter {
             .then((execPath) => {
                 return new Promise((resolve, reject) => {
                     if (this.serviceStatus.state !== ConnectorState.STOPPED) {
-                        return reject('The daemon need to be stopped');
+                        return reject(new Error('The daemon need to be stopped'));
                     }
                     childProcess.exec(`${execPath} config ${config}`,
                         { env: this.options.extra.env },
@@ -142,7 +142,7 @@ export class IpfsConnector extends EventEmitter {
                             }
                             if (stderr) {
                                 this.logger.warn(stderr);
-                                return reject(stderr.toString());
+                                return reject(new Error(stderr.toString()));
                             }
                             try {
                                 return resolve(value.trim());
@@ -165,7 +165,7 @@ export class IpfsConnector extends EventEmitter {
             .then((execPath) => {
                 return new Promise((resolve, reject) => {
                     if (this.serviceStatus.state !== ConnectorState.STOPPED) {
-                        return reject('The daemon need to be stopped');
+                        return reject(new Error('The daemon needs to be stopped'));
                     }
                     childProcess.exec(`${execPath} config ${config} ${value}`,
                         { env: this.options.extra.env },
@@ -238,7 +238,7 @@ export class IpfsConnector extends EventEmitter {
             case ConnectorState.STARTED:
                 return Promise.resolve(this.api);
             case ConnectorState.STOPPING:
-                return Promise.reject('You can\'t start the daemon while stopping it.');
+                return Promise.reject(new Error('You can\'t start the daemon while stopping it.'));
         }
 
         this.emit(events.SERVICE_STARTING);
@@ -500,7 +500,7 @@ export class IpfsConnector extends EventEmitter {
             case ConnectorState.STOPPED:
                 return Promise.resolve(this);
             case ConnectorState.STARTING:
-                return Promise.reject('You can\'t stop the daemon while starting it.');
+                return Promise.reject(new Error('You can\'t stop the daemon while starting it.'));
             case ConnectorState.STOPPING:
                 return new Promise((resolve) => this.on(events.SERVICE_STOPPED, () => resolve()));
         }
@@ -578,7 +578,7 @@ export class IpfsConnector extends EventEmitter {
                                     this._init();
                                     return resolve(Promise.delay(500).then(() => this.staticGetPorts(true)));
                                 }
-                                return reject(stderr.toString());
+                                return reject(new Error(stderr.toString()));
                             }
                             try {
                                 config = JSON.parse(addresses);

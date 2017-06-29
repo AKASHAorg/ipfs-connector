@@ -50,7 +50,7 @@
     "rimraf": "2.6.1",
     "standard-version": "4.2.0",
     "tslint": "5.4.3",
-    "typescript": "2.4.1",
+    "typescript": "2.3.4",
     "typings": "2.1.1"
   },
   "homepage": "https://github.com/AkashaProject/ipfs-connector#readme",

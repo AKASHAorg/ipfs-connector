@@ -25,7 +25,8 @@ export enum ConnectorState {
     STOPPED,
     STARTING,
     STARTED,
-    STOPPING
+    STOPPING,
+    UPGRADING
 }
 
 export class IpfsConnector extends EventEmitter {
@@ -523,6 +524,12 @@ export class IpfsConnector extends EventEmitter {
                 { env: this.options.extra.env },
                 cb
             );
+        }).catch((err) => {
+            // add fallback process.kill() for ipfs < v0.4.10
+            if (this.process) {
+                return this.process.kill();
+            }
+            throw err;
         });
     }
 
@@ -753,6 +760,7 @@ export class IpfsConnector extends EventEmitter {
                 }
 
                 this.emit(events.UPGRADING_BINARY);
+                this._setState(ConnectorState.UPGRADING);
                 return this.stop().delay(5000).then(() => {
                     return this.downloadManager
                         .deleteBin()

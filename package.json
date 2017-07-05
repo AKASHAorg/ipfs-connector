@@ -30,9 +30,9 @@
     "url": "https://github.com/AkashaProject/ipfs-connector/issues"
   },
   "dependencies": {
-    "@akashaproject/ipfs-connector-utils": "1.0.4",
+    "@akashaproject/ipfs-connector-utils": "1.0.5",
     "@types/bluebird": "3.5.8",
-    "@types/node": "8.0.5",
+    "@types/node": "8.0.7",
     "bin-wrapper": "3.0.2",
     "bluebird": "3.5.0",
     "ipfs-api": "14.0.4",
@@ -50,7 +50,7 @@
     "rimraf": "2.6.1",
     "standard-version": "4.2.0",
     "tslint": "5.4.3",
-    "typescript": "2.3.4",
+    "typescript": "2.4.1",
     "typings": "2.1.1"
   },
   "homepage": "https://github.com/AkashaProject/ipfs-connector#readme",

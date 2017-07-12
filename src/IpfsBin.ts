@@ -3,11 +3,58 @@
 import * as  Promise from 'bluebird';
 import { unlink } from 'fs';
 import * as path from 'path';
-import * as Wrapper from 'bin-wrapper';
+import * as EventEmitter from 'events';
+import * as BinWrapper from 'bin-wrapper';
+import { events } from './constants';
+
+const download = require('download');
+const osFilterObj = require('os-filter-obj');
 
 export const version = '0.4.10';
 const base: string = `https://dist.ipfs.io/go-ipfs/v${version}/go-ipfs_v${version}_`;
 const defaultTarget = path.join(__dirname, 'bin');
+
+class Wrapper extends BinWrapper {
+    private _progress = new EventEmitter();
+
+    public download(cb) {
+        const files = osFilterObj(this.src());
+        if (!files.length) {
+            cb(new Error('No binary found matching your system. It\'s probably not supported.'));
+            return;
+        }
+        this._progress.emit(events.DOWNLOAD_STARTED);
+        const destination = this.dest();
+        const downloads = [];
+        files.forEach((file) => {
+            downloads.push(
+                download(file.url, destination, { extract: true })
+                    .on('response', res => {
+                        const progress = { total: res.headers['content-length'], completed: 0, resource: file.url };
+                        this._progress.emit(events.DOWNLOAD_PROGRESS, progress);
+                        res.on('data', data => {
+                            progress.completed += data.length;
+                            this._progress.emit(events.DOWNLOAD_PROGRESS, progress);
+                        });
+                    })
+                    .on('error', error => {
+                        this._progress.emit(events.DOWNLOAD_ERROR, error);
+                    })
+            );
+        });
+
+        // this is required for backward compatibility
+        return Promise.all(downloads).then(() => {
+            cb();
+        }).catch((err) => {
+            cb(err);
+        });
+    }
+    // use this getter to listen for DOWNLOAD_* events
+    public get downloadProgress() {
+        return this._progress;
+    }
+}
 
 export class IpfsBin {
     public wrapper: any;
@@ -24,7 +71,7 @@ export class IpfsBin {
             .src(base + 'windows-amd64.zip', 'win32', 'x64')
             .src(base + 'darwin-amd64.tar.gz', 'darwin', 'x64')
             .dest(target)
-            .use(process.platform === 'win32' ? 'ipfs.exe' : 'ipfs');
+            .use(process.platform === 'win32' ? path.join('go-ipfs', 'ipfs.exe') : path.join('go-ipfs', 'ipfs'));
     }
 
     /**
@@ -40,23 +87,12 @@ export class IpfsBin {
      * @param cb
      */
     check(cb: any) {
-        let downloading = false;
-        const timeOut = setTimeout(() => {
-            downloading = true;
-            cb('', { downloading });
-        }, 2000);
         this.wrapper.run(['version'], (err: any) => {
-            clearTimeout(timeOut);
             if (err) {
                 return cb(err);
             }
             const response = { binPath: this.getPath() };
-
-            if (!downloading) {
-                return cb('', response);
-            }
-
-            setTimeout(() => cb('', response), 300);
+            return cb('', response);
         });
     }
 

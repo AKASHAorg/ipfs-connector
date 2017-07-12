@@ -1,4 +1,5 @@
 declare module 'bin-wrapper';
+
 declare module 'ipfs';
 declare module 'ipfs-api';
 declare module 'ipld';

@@ -52,6 +52,20 @@ describe('IpfsConnector', function () {
     });
 
     it('should check for binaries', function () {
+        let downloading = false;
+
+        // this is important for DOWNLOAD_EVENTS
+        instance.enableDownloadEvents();
+
+        instance.once(constants.events.DOWNLOAD_STARTED,  () => {
+            downloading = true;
+        });
+
+        instance.once(constants.events.DOWNLOAD_PROGRESS,  (data) => {
+            expect(downloading).to.be.true;
+            expect(data).to.exist;
+        });
+
         return instance.checkExecutable();
     });
 

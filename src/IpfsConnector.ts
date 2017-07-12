@@ -49,7 +49,7 @@ export class IpfsConnector extends EventEmitter {
     private _callbacks = new Map();
     private _api: IpfsApiHelper;
     private _upgradeBin = true;
-
+    private _downloadEventsEnabled = false;
 
     /**
      * @param enforcer
@@ -112,6 +112,7 @@ export class IpfsConnector extends EventEmitter {
      */
     public setBinPath(path: string): void {
         this.downloadManager = new IpfsBin(path);
+        this._downloadEventsEnabled = false;
     }
 
     /**
@@ -192,6 +193,26 @@ export class IpfsConnector extends EventEmitter {
         this.options.extra.env.IPFS_PATH = target;
     }
 
+    // this must be called 1 time after initializing IpfsBin object
+    public enableDownloadEvents() {
+        if (this._downloadEventsEnabled) {
+            return;
+        }
+        this.downloadManager.wrapper.downloadProgress.on(events.DOWNLOAD_STARTED, () => {
+            this._setState(ConnectorState.DOWNLOADING);
+            this.emit(events.DOWNLOAD_STARTED);
+        });
+
+        this.downloadManager.wrapper.downloadProgress.on(events.DOWNLOAD_PROGRESS, (progress) => {
+            this.emit(events.DOWNLOAD_PROGRESS, progress);
+        });
+
+        this.downloadManager.wrapper.downloadProgress.on(events.DOWNLOAD_ERROR, (error) => {
+            this.emit(events.DOWNLOAD_ERROR, error);
+        });
+        this._downloadEventsEnabled = true;
+    }
+
     /**
      * Check and download ipfs executable if needed.
      * Default target for executable
@@ -200,7 +221,7 @@ export class IpfsConnector extends EventEmitter {
     public checkExecutable(): Promise<any> {
         return new Promise((resolve, reject) => {
             this.downloadManager.check(
-                (err: Error, data: { binPath?: string, downloading?: boolean }) => {
+                (err: Error, data: { binPath?: string }) => {
                     if (err) {
                         this.logger.error(err);
                         this.emit(events.BINARY_CORRUPTED, err);
@@ -215,14 +236,6 @@ export class IpfsConnector extends EventEmitter {
                             this._setState(ConnectorState.STOPPED);
                         }
                         return resolve(data.binPath);
-                    }
-
-                    if (data.downloading) {
-                        this._setState(ConnectorState.DOWNLOADING);
-                        /**
-                         * @event IpfsConnector#DOWNLOAD_STARTED
-                         */
-                        this.emit(events.DOWNLOAD_STARTED);
                     }
                 });
         });

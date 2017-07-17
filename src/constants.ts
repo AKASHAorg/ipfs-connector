@@ -1,19 +1,21 @@
-export const events = {
-    DOWNLOAD_STARTED: 'DOWNLOAD_STARTED',
-    DOWNLOAD_PROGRESS: 'DOWNLOAD_PROGRESS',
-    DOWNLOAD_ERROR: 'DOWNLOAD_ERROR',
-    BINARY_CORRUPTED: 'BINARY_CORRUPTED',
-    UPGRADING_BINARY: 'UPGRADING_BINARY',
-    SERVICE_STARTING: 'SERVICE_STARTING',
-    SERVICE_STARTED: 'start',
-    SERVICE_STOPPING: 'SERVICE_STOPPING',
-    SERVICE_STOPPED: 'stop',
-    SERVICE_FAILED: 'SERVICE_FAILED',
-    IPFS_INITING: 'IPFS_INITING',
-    IPFS_INIT: 'init',
-    STATUS_UPDATE: 'STATUS_UPDATE',
-    ERROR: 'error'
-};
+import { events as binEvents } from '@akashaproject/bin-wrapper-progress';
+
+export const events = Object.assign(
+    {},
+    binEvents,
+    {
+        BINARY_CORRUPTED: 'BINARY_CORRUPTED',
+        UPGRADING_BINARY: 'UPGRADING_BINARY',
+        SERVICE_STARTING: 'SERVICE_STARTING',
+        SERVICE_STARTED: 'start',
+        SERVICE_STOPPING: 'SERVICE_STOPPING',
+        SERVICE_STOPPED: 'stop',
+        SERVICE_FAILED: 'SERVICE_FAILED',
+        IPFS_INITING: 'IPFS_INITING',
+        IPFS_INIT: 'init',
+        STATUS_UPDATE: 'STATUS_UPDATE',
+        ERROR: 'error'
+    });
 
 export const options = {
     retry: true,

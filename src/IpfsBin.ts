@@ -25,7 +25,7 @@ export class IpfsBin {
             .src(base + 'windows-amd64.zip', 'win32', 'x64')
             .src(base + 'darwin-amd64.tar.gz', 'darwin', 'x64')
             .dest(target)
-            .use(process.platform === 'win32' ? path.join('go-ipfs', 'ipfs.exe') : path.join('go-ipfs', 'ipfs'));
+            .use(process.platform === 'win32' ? 'ipfs.exe' : 'ipfs');
     }
 
     /**

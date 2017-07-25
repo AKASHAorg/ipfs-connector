@@ -33,9 +33,9 @@
     "@akashaproject/bin-wrapper-progress": "1.0.3",
     "@akashaproject/ipfs-connector-utils": "1.0.5",
     "@types/bluebird": "3.5.8",
-    "@types/node": "8.0.14",
+    "@types/node": "8.0.16",
     "bluebird": "3.5.0",
-    "ipfs-api": "14.0.4",
+    "ipfs-api": "14.1.0",
     "is-ipfs": "0.3.0"
   },
   "devDependencies": {

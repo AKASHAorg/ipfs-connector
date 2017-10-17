@@ -2,6 +2,7 @@
 [![Build Status](https://travis-ci.org/AkashaProject/ipfs-connector.svg?branch=master)](https://travis-ci.org/AkashaProject/ipfs-connector)
 [![Coverage Status](https://coveralls.io/repos/github/AkashaProject/ipfs-connector/badge.svg?branch=master)](https://coveralls.io/github/AkashaProject/ipfs-connector?branch=master)
 [![npm](https://img.shields.io/npm/dm/@akashaproject/ipfs-connector.svg)](https://www.npmjs.com/package/@akashaproject/ipfs-connector)
+[![Known Vulnerabilities](https://snyk.io/test/github/akashaproject/ipfs-connector/badge.svg)](https://snyk.io/test/github/akashaproject/ipfs-connector)
 
 Library for solving the cross-platform binaries problem (works on Windows as well) containing helpers for easier read/write on IPFS by extending the [JavaScript IPFS API](https://github.com/ipfs/js-ipfs-api) functionality.
 

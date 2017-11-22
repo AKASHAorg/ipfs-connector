@@ -33,13 +33,13 @@
     "@akashaproject/bin-wrapper-progress": "1.0.6",
     "@akashaproject/ipfs-connector-utils": "1.0.9",
     "@types/bluebird": "3.5.18",
-    "@types/node": "8.0.51",
+    "@types/node": "8.0.53",
     "bluebird": "3.5.1",
-    "ipfs-api": "15.1.0",
+    "ipfs-api": "17.1.2",
     "is-ipfs": "0.3.2"
   },
   "devDependencies": {
-    "@types/chai": "4.0.4",
+    "@types/chai": "4.0.5",
     "@types/mocha": "2.2.44",
     "@types/rimraf": "2.0.2",
     "chai": "4.1.2",

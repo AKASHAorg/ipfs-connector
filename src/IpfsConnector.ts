@@ -7,7 +7,6 @@ import IpfsApiHelper from '@akashaproject/ipfs-connector-utils';
 import * as ipfsApi from 'ipfs-api';
 import { EventEmitter } from 'events';
 import { events, options } from './constants';
-
 import childProcess = require('child_process');
 import path = require('path');
 
@@ -663,7 +662,11 @@ export class IpfsConnector extends EventEmitter {
      */
     private _setPort(service: string, port: string, execPath: string) {
         return new Promise((resolve, reject) => {
-            childProcess.exec(`${execPath} config ${service} '${port}'`,
+            const command = process.platform === 'win32' ?
+                `${execPath} config ${service} ${port}` :
+                `${execPath} config ${service} '${port}'`;
+
+            childProcess.exec(command,
                 { env: this.options.extra.env },
                 (error, done, stderr) => {
                     if (error) {

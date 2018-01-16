@@ -134,7 +134,7 @@ export class IpfsConnector extends EventEmitter {
                     if (this.serviceStatus.state !== ConnectorState.STOPPED) {
                         return reject(new Error('The daemon need to be stopped'));
                     }
-                    childProcess.exec(`${execPath} config ${config}`,
+                    childProcess.exec(`"${execPath}" config ${config}`,
                         { env: this.options.extra.env },
                         (error, value, stderr) => {
                             if (error) {
@@ -168,7 +168,7 @@ export class IpfsConnector extends EventEmitter {
                     if (this.serviceStatus.state !== ConnectorState.STOPPED) {
                         return reject(new Error('The daemon needs to be stopped'));
                     }
-                    childProcess.exec(`${execPath} config ${config} ${value}`,
+                    childProcess.exec(`"${execPath}" config ${config} ${value}`,
                         { env: this.options.extra.env },
                         (error, done, stderr) => {
                             if (error) {
@@ -572,7 +572,7 @@ export class IpfsConnector extends EventEmitter {
         return this.checkExecutable()
             .then((execPath) => {
                 return new Promise((resolve, reject) => {
-                    childProcess.exec(`${execPath} config Addresses`,
+                    childProcess.exec(`"${execPath}" config Addresses`,
                         { env: this.options.extra.env },
                         (error, addresses, stderr) => {
                             let config: {
@@ -663,8 +663,8 @@ export class IpfsConnector extends EventEmitter {
     private _setPort(service: string, port: string, execPath: string) {
         return new Promise((resolve, reject) => {
             const command = process.platform === 'win32' ?
-                `${execPath} config ${service} ${port}` :
-                `${execPath} config ${service} '${port}'`;
+                `"${execPath}" config ${service} ${port}` :
+                `"${execPath}" config ${service} '${port}'`;
 
             childProcess.exec(command,
                 { env: this.options.extra.env },

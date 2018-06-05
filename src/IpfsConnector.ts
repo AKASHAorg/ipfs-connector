@@ -414,6 +414,7 @@ export class IpfsConnector extends EventEmitter {
         if (data.includes('acquire lock') && !this._isRetry) {
             return this
                 .stop()
+                .delay(2000)
                 .then(() => this._cleanupFile(path.join(this.options.extra.env.IPFS_PATH, LOCK_FILE)))
                 .then(() => {
                     this._isRetry = true;
@@ -524,7 +525,7 @@ export class IpfsConnector extends EventEmitter {
         this.options.retry = true;
         this.serviceStatus.api = false;
         if (this.process) {
-            return this._shutDown().delay(1000).then(() => this);
+            return this._shutDown().delay(2000).then(() => this);
         }
         return Promise.resolve(this);
     }
@@ -643,7 +644,7 @@ export class IpfsConnector extends EventEmitter {
                 const reqSetOptions = Promise.each(req, (el) => {
                     return this._setPort(el.option, el.value, execPath);
                 });
-                return reqSetOptions.then(() => {
+                return Promise.all(reqSetOptions).then(() => {
                     if (start) {
                         return this.start();
                     }
@@ -728,7 +729,7 @@ export class IpfsConnector extends EventEmitter {
         }
         return Promise.all(setup).then((set: any) => {
             if (restart) {
-                return Promise.resolve(this.stop()).delay(2000)
+                return this.stop().delay(2000)
                     .then(() => {
                         this.start();
                         return Promise.delay(3000).then(() => set);

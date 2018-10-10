@@ -19,6 +19,9 @@ const logger = {
     error: function () {
     },
     warn: function () {
+    },
+    debug: function () {
+
     }
 };
 
@@ -83,7 +86,7 @@ describe('IpfsConnector', function () {
     it('checks ipfs version', function () {
         return instance.checkVersion().then((res: any) => {
             expect(res).to.exist;
-        })
+        });
     });
     it('should get ipfs config addresses', function () {
         expect(instance.api).to.exist;

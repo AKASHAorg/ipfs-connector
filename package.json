@@ -33,7 +33,7 @@
     "@akashaproject/bin-wrapper-progress": "1.0.7",
     "@akashaproject/ipfs-connector-utils": "1.0.24",
     "@types/bluebird": "3.5.24",
-    "@types/node": "10.11.5",
+    "@types/node": "10.11.6",
     "bluebird": "3.5.2",
     "ipfs-api": "24.0.2",
     "is-ipfs": "0.4.7"
@@ -50,7 +50,7 @@
     "rimraf": "2.6.2",
     "standard-version": "4.4.0",
     "tslint": "5.11.0",
-    "typescript": "3.1.1"
+    "typescript": "3.1.2"
   },
   "homepage": "https://github.com/AkashaProject/ipfs-connector#readme",
   "directories": {

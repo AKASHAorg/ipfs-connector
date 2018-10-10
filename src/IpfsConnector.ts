@@ -11,8 +11,8 @@ import childProcess = require('child_process');
 import path = require('path');
 
 options.extra.env = Object.assign(process.env, { IPFS_PATH: path.join(homedir(), '.ipfs') });
-const symbolEnforcer = Symbol();
-const symbol = Symbol();
+const symbolEnforcer = Symbol('ipfs');
+const symbol = Symbol('ipfs');
 const ROOT_OPTION = 'Addresses';
 const LOCK_FILE = 'repo.lock';
 const API_FILE = 'api';
@@ -436,17 +436,17 @@ export class IpfsConnector extends EventEmitter {
      */
     private _pipeStd() {
         const logError = (data: Buffer) => this.logger.error(data.toString());
-        const logInfo = (data: Buffer) => this.logger.info(data.toString());
+        const logDebug = (data: Buffer) => this.logger.debug(data.toString());
 
         this.process.once('exit', (code: number, signal: string) => this._handleExit(code, signal));
         this.process.on('error', (err: Error) => this._handleError(err));
 
         this.process.stderr.on('data', logError);
-        this.process.stdout.on('data', logInfo);
+        this.process.stdout.on('data', logDebug);
         this.once(events.SERVICE_STOPPED, () => {
             if (this.process) {
                 this.process.stderr.removeListener('data', logError);
-                this.process.stdout.removeListener('data', logInfo);
+                this.process.stdout.removeListener('data', logDebug);
                 this.process.removeListener('exit', (code: number, signal: string) => this._handleExit(code, signal));
                 this.process.removeListener('error', (err: Error) => this._handleError(err));
                 this.process = null;

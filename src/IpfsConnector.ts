@@ -500,7 +500,7 @@ export class IpfsConnector extends EventEmitter {
             // init exited with errors
             return this.emit(events.IPFS_INIT, stderr.toString());
         }
-        this.logger.info(stdout);
+        this.logger.debug(stdout);
         // everything works fine
         return this.emit(events.IPFS_INIT);
     }

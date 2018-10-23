@@ -16,9 +16,11 @@ let bigObjHash: any, nodeHash: any;
 const logger = {
     info: function () {
     },
-    error: function () {
+    error: function (msg) {
+        console.error(msg);
     },
-    warn: function () {
+    warn: function (msg) {
+        console.warn(msg);
     },
     debug: function () {
 

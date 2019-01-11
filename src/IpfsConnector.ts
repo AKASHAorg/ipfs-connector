@@ -4,7 +4,7 @@ import { stat, unlink } from 'fs';
 import * as Promise from 'bluebird';
 import { IpfsBin, version as requiredVersion } from './IpfsBin';
 import IpfsApiHelper from '@akashaproject/ipfs-connector-utils';
-import * as ipfsApi from 'ipfs-api';
+import * as ipfsApi from 'ipfs-http-client';
 import { EventEmitter } from 'events';
 import { events, options } from './constants';
 import childProcess = require('child_process');
@@ -687,8 +687,8 @@ export class IpfsConnector extends EventEmitter {
      * @returns {Bluebird<R>|Bluebird<{gateway: T, api: T, swarm: T}>|Bluebird<U2|{gateway: T, api: T, swarm: T}>|Promise<{gateway: T, api: T, swarm: T}>|PromiseLike<{gateway: T, api: T, swarm: T}>|Promise<TResult|{gateway: T, api: T, swarm: T}>|any}
      */
     public rpcGetPorts(): Promise<{ gateway: string, api: string, swarm: string }> {
-        return this.api.apiClient
-            .config.getAsync('Addresses')
+        return this.api.ipfsApi
+            .config.get('Addresses')
             .then((config: any) => {
                 const { Swarm, API, Gateway } = config;
                 const swarm = Swarm[0].split('/').pop();
@@ -708,7 +708,7 @@ export class IpfsConnector extends EventEmitter {
         const setup: any[] = [];
         if (ports.hasOwnProperty('gateway')) {
             setup.push(
-                this.api.apiClient
+                this.api.ipfsApi
                     .config.set('Addresses.Gateway', `/ip4/127.0.0.1/tcp/${ports.gateway}`)
             );
         }
@@ -716,14 +716,14 @@ export class IpfsConnector extends EventEmitter {
         if (ports.hasOwnProperty('api')) {
             this.options.apiAddress = `/ip4/127.0.0.1/tcp/${ports.api}`;
             setup.push(
-                this.api.apiClient
+                this.api.ipfsApi
                     .config.set('Addresses.API', this.options.apiAddress)
             );
         }
 
         if (ports.hasOwnProperty('swarm')) {
             setup.push(
-                this.api.apiClient
+                this.api.ipfsApi
                     .config.set('Addresses.Swarm', [`/ip4/0.0.0.0/tcp/${ports.swarm}`, `/ip6/::/tcp/${ports.swarm}`])
             );
         }
@@ -768,7 +768,7 @@ export class IpfsConnector extends EventEmitter {
      * @returns {Thenable<IpfsApiHelper>|Bluebird<IpfsApiHelper>|PromiseLike<TResult2|IpfsApiHelper>|Bluebird<R>|Bluebird<U2|IpfsApiHelper>|Promise<TResult2|IpfsApiHelper>}
      */
     public checkVersion() {
-        return this.api.apiClient.versionAsync().then(
+        return this.api.ipfsApi.version().then(
             (data: any) => {
                 this.serviceStatus.api = true;
                 this.serviceStatus.version = data.version;

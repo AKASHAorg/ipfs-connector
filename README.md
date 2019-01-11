@@ -33,16 +33,17 @@ instance.start().then((api) => {});
 instance.stop()
 
 // see api docs
-// add data to ipfs
-instance.api.add(object | Buffer)
+// add/get data to ipfs
+// cid zdpuB2CAUgUbyJ4s8SmqcGGaGfs7bG337dDNty8NSCR3fhgRw
+const cid = instance.api.add({firstName: 'John', lastName: 'Doe'});
+//returns John
+instance.api.get(cid, '/firstName'); 
 
 // read data from ipfs
-instance.api.get('ipfs hash')
+instance.api.ipfsApi.cat('ipfs hash')
 
-// resolve ipfs hash object paths(see tests)
-
-// access default js-ipfs-api from
-instance.api.apiClient
+// access default ipfs-http-api from
+instance.api.ipfsApi
 ```
 ### Dev
 ```

@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@akashaproject/bin-wrapper-progress": "1.0.8",
-    "@akashaproject/ipfs-connector-utils": "2.0.0",
+    "@akashaproject/ipfs-connector-utils": "2.0.1",
     "@types/bluebird": "3.5.25",
     "@types/node": "11.9.4",
     "bluebird": "3.5.3",

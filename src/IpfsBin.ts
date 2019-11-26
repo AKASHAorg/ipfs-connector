@@ -5,7 +5,7 @@ import { unlink } from 'fs';
 import * as path from 'path';
 import Wrapper from '@akashaproject/bin-wrapper-progress';
 
-export const version = '0.4.20';
+export const version = '0.4.22';
 const base: string = `https://dist.ipfs.io/go-ipfs/v${version}/go-ipfs_v${version}_`;
 const defaultTarget = path.join(__dirname, 'bin');
 

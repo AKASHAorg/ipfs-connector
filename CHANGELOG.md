@@ -1,6 +1,13 @@
-# Change Log
+# Changelog
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### [1.11.5](https://github.com/AkashaProject/ipfs-connector/compare/v1.11.4...v1.11.5) (2019-11-26)
+
+
+### Bug Fixes
+
+* .snyk, package.json & package-lock.json to reduce vulnerabilities ([0eb2053](https://github.com/AkashaProject/ipfs-connector/commit/0eb205347fb4f4f1ccc5370a21c9bd9462a57d3a))
 
 ## [1.11.4](https://github.com/AkashaProject/ipfs-connector/compare/v1.11.3...v1.11.4) (2019-04-25)
 
